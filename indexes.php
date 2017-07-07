@@ -241,14 +241,14 @@
 		
 		function indPre(&$rowdata, $actions) {
 			global $data, $lang;
-			
+
 			if ($data->phpBool($rowdata->fields['indisprimary'])) {
 				$rowdata->fields['+constraints'] = $lang['strprimarykey'];
-				$actions['drop']['disable'] = true;
+		//		$actions['drop']['disable'] = true;
 			}
 			elseif ($data->phpBool($rowdata->fields['indisunique'])) {
 				$rowdata->fields['+constraints'] = $lang['struniquekey'];
-				$actions['drop']['disable'] = true;
+	//			$actions['drop']['disable'] = true;
 			}
 			else
 				$rowdata->fields['+constraints'] = '';

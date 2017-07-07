@@ -60,7 +60,7 @@ class ADODB_postgres64 extends ADOConnection{
 	var $hasInsertID = true;
 	var $_resultid = false;
   	var $concat_operator='||';
-	var $metaDatabasesSQL = "select datname from pg_database where datname not in ('template0','template1') order by 1";
+	var $metaDatabasesSQL = "select datname from pg_database where datname not in ('template0','template1') AND has_database_privilege(datname, 'CONNECT') order by 1";
     var $metaTablesSQL = "select tablename,'T' from pg_tables where tablename not like 'pg\_%'
 	and tablename not in ('sql_features', 'sql_implementation_info', 'sql_languages',
 	 'sql_packages', 'sql_sizing', 'sql_sizing_profiles')
@@ -678,8 +678,13 @@ WHERE (c2.relname=\'%s\' or c2.relname=lower(\'%s\'))';
 
 		//if ($user) $linea = "user=$user host=$linea password=$pwd dbname=$db port=5432";
 
+		
 		if ($ctype === 1) { // persistent
-			$this->_connectionID = pg_pconnect($str);
+			try {
+				$this->_connectionID = pg_pconnect($str);
+			} catch (PDOException $e) {
+					var_dump( $e->getMessage() );
+			} 
 		} else {
 			if ($ctype === -1) { // nconnect, we trick pgsql ext by changing the connection str
 			static $ncnt;
@@ -689,7 +694,11 @@ WHERE (c2.relname=\'%s\' or c2.relname=lower(\'%s\'))';
 
 				$str .= str_repeat(' ',$ncnt);
 			}
-			$this->_connectionID = @pg_connect($str);
+			try {
+				$this->_connectionID = pg_connect($str);
+			} catch (PDOException $e) {
+					var_dump( $e->getMessage() );
+			} 
 		}
 		if ($this->_connectionID === false) return false;
 		$this->Execute("set datestyle='ISO'");
@@ -799,13 +808,14 @@ WHERE (c2.relname=\'%s\' or c2.relname=lower(\'%s\'))';
 
 	function _errconnect()
 	{
-		if (defined('DB_ERROR_CONNECT_FAILED')) return DB_ERROR_CONNECT_FAILED;
-		else return 'Database connection failed';
+	//	if (defined('DB_ERROR_CONNECT_FAILED')) return DB_ERROR_CONNECT_FAILED;
+	//	else return 'Database connection failed';
 	}
 
 	/*	Returns: the last error message from previous database operation	*/
 	function ErrorMsg()
 	{
+
 		if ($this->_errorMsg !== false) return $this->_errorMsg;
 		if (ADODB_PHPVER >= 0x4300) {
 			if (!empty($this->_resultid)) {
@@ -818,7 +828,8 @@ WHERE (c2.relname=\'%s\' or c2.relname=lower(\'%s\'))';
 			} else $this->_errorMsg = $this->_errconnect();
 		} else {
 			if (empty($this->_connectionID)) $this->_errconnect();
-			else $this->_errorMsg = @pg_errormessage($this->_connectionID);
+			else
+				$this->_errorMsg = @pg_errormessage($this->_connectionID);
 		}
 		return $this->_errorMsg;
 	}

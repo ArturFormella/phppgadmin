@@ -55,6 +55,7 @@ class Connection {
 		$v = pg_version($this->conn->_connectionID);
 		if (isset($v['server'])) $version = $v['server'];
 
+
 		// If we didn't manage to get the version without a query, query...
 		if (!isset($version)) {
 			$adodb = new ADODB_base($this->conn);
@@ -67,7 +68,7 @@ class Connection {
 				$this->platform = 'MINGW';
 
 			$params = explode(' ', $field);
-			if (!isset($params[1])) return -3;
+			if (!isset($params[1])) return 'Postgres';
 
 			$version = $params[1]; // eg. 8.4.4
 		}
@@ -76,7 +77,9 @@ class Connection {
 
 		// Detect version and choose appropriate database driver
 		switch (substr($version,0,3)) {
-                        case '9.5': return 'Postgres'; break;
+            case '10b': return 'Postgres'; break;
+            case '9.6': return 'Postgres'; break;
+            case '9.5': return 'Postgres'; break;
 			case '9.4': return 'Postgres94'; break;
 			case '9.3': return 'Postgres93'; break;
 			case '9.2': return 'Postgres92'; break;

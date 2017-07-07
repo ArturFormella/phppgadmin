@@ -38,14 +38,24 @@ function Error_Handler($dbms, $fn, $errno, $errmsg, $p1=false, $p2=false)
 
 	case 'PCONNECT':
 	case 'CONNECT':
+	echo "<pre>";
+	var_export($errno);
+	var_export($errno);
+	//var_export($p1);
+	//var_export($p2);
+	//var_export($_SESSION);
+	throw new Exception();
 		$_failed = true;
 		global $_reload_browser;
-		$_reload_browser = true;
+		$_reload_browser = true;	
+		$msg = $lang['strnoaccess'];
+		echo $msg;
+		
+		/*
 		unset($_SESSION['sharedUsername']);
 		unset($_SESSION['sharedPassword']);
 		unset($_SESSION['webdbLogin'][$_REQUEST['server']]);
-		$msg = $lang['strloginfailed'];
-		include('./login.php');
+		include('./login.php');*/
 		exit;
 		break;
 	default:

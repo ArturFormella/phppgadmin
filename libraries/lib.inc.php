@@ -19,7 +19,7 @@
 	$appVersion = '5.2-dev';
 
 	// PostgreSQL and PHP minimum version
-	$postgresqlMinVer = '7.4';
+	$postgresqlMinVer = '0.4';
 	$phpMinVer = '5.0';
 
 	// Check the version of PHP
@@ -52,6 +52,10 @@
 
 	// Start session (if not auto-started)
 	if (!ini_get('session.auto_start')) {
+		ini_set('session.gc_probability', 1);
+		ini_set('session.gc_divisor', 20000);
+		ini_set('session.gc_maxlifetime', $conf['session_time'] );
+		session_set_cookie_params($conf['session_time']);
 		session_name('PPA_ID');
 		session_start();
 	}

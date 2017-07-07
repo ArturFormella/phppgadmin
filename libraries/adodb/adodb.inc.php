@@ -526,15 +526,17 @@
 		}
 		if (isset($rez)) {
 			$err = $this->ErrorMsg();
-			if (empty($err)) $err = "Connection error to server '$argHostname' with user '$argUsername'";
+//			if (empty($err)) $err = "Connection error to server '$argHostname' with user '$argUsername'";
 			$ret = false;
 		} else {
 			$err = "Missing extension for ".$this->dataProvider;
 			$ret = 0;
 		}
-		if ($fn = $this->raiseErrorFn)
+		if ($fn = $this->raiseErrorFn){
+			var_export("Błąd");
+			//var_export($this);
 			$fn($this->databaseType,'CONNECT',$this->ErrorNo(),$err,$this->host,$this->database,$this);
-
+		}
 
 		$this->_connectionID = false;
 		if ($this->debug) ADOConnection::outp( $this->host.': '.$err);
@@ -588,7 +590,7 @@
 		if ($rez = $this->_pconnect($this->host, $this->user, $argPassword, $this->database)) return true;
 		if (isset($rez)) {
 			$err = $this->ErrorMsg();
-			if (empty($err)) $err = "Connection error to server '$argHostname' with user '$argUsername'";
+	//		if (empty($err)) $err = "Connection error to server '$argHostname' with user '$argUsername'";
 			$ret = false;
 		} else {
 			$err = "Missing extension for ".$this->dataProvider;
@@ -1173,8 +1175,8 @@
 	 */
 	function ErrorMsg()
 	{
-		if ($this->_errorMsg) return '!! '.strtoupper($this->dataProvider.' '.$this->databaseType).': '.$this->_errorMsg;
-		else return '';
+			return '!! '.strtoupper($this->dataProvider.' '.$this->databaseType).': '.$this->_errorMsg;
+		
 	}
 
 

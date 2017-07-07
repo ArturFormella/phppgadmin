@@ -490,7 +490,7 @@
 			// The description of the server is returned in $platform.
 			$_type = $_connection->getDriver($platform);
 			if ($_type === null) {
-				printf($lang['strpostgresqlversionnotsupported'], $postgresqlMinVer);
+				printf($lang['strpostgresqlversionnotsupported'], 0);
 				exit;
 			}
 			$this->setServerInfo('platform', $platform, $server_id);

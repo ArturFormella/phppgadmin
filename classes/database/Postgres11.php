@@ -1,28 +1,28 @@
 <?php
 
 /**
- * PostgreSQL 9.4 support
+ * PostgreSQL 11 support
  *
  */
 
 include_once('./classes/database/Postgres.php');
 
-class Postgres94 extends Postgres {
+class Postgres11 extends Postgres {
 
-	var $major_version = 9.4;
+	var $major_version = 11;
 
 	/**
 	 * Constructor
 	 * @param $conn The database connection
 	 */
-	function Postgres94($conn) {
+	function Postgres11($conn) {
 		$this->Postgres($conn);
 	}
 
 	// Help functions
 
 	function getHelpPages() {
-		include_once('./help/PostgresDoc94.php');
+		include_once('./help/PostgresDoc11.php');
 		return $this->help_page;
 	}
 

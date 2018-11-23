@@ -11,7 +11,7 @@ include_once('./classes/database/ADODB_base.php');
 
 class Postgres extends ADODB_base {
 
-	var $major_version = 9.5;
+	var $major_version = 12;
 	// Max object name length
 	var $_maxNameLen = 63;
 	// Store the current schema
@@ -2646,14 +2646,20 @@ class Postgres extends ADODB_base {
 		$this->fieldClean($sequence);
 		$this->clean($c_sequence);
 
-		$sql = "
-			SELECT c.relname AS seqname, s.*,
-				pg_catalog.obj_description(s.tableoid, 'pg_class') AS seqcomment,
+        $sql = "
+            SELECT
+                c.relname AS seqname, s.*, 
+                m.seqstart AS start_value, m.seqincrement AS increment_by, m.seqmax AS max_value, m.seqmin AS min_value, 
+                m.seqcache AS cache_value, m.seqcycle AS is_cycled,  
+			    pg_catalog.obj_description(m.seqrelid, 'pg_class') AS seqcomment,
 				u.usename AS seqowner, n.nspname
-			FROM \"{$sequence}\" AS s, pg_catalog.pg_class c, pg_catalog.pg_user u, pg_catalog.pg_namespace n
-			WHERE c.relowner=u.usesysid AND c.relnamespace=n.oid
-				AND c.relname = '{$c_sequence}' AND c.relkind = 'S' AND n.nspname='{$c_schema}'
-				AND n.oid = c.relnamespace";
+            FROM
+                \"{$sequence}\" AS s, pg_catalog.pg_sequence m,  
+                pg_catalog.pg_class c, pg_catalog.pg_user u, pg_catalog.pg_namespace n                       
+            WHERE
+                c.relowner=u.usesysid AND c.relnamespace=n.oid 
+                AND c.oid = m.seqrelid AND c.relname = '{$c_sequence}' AND c.relkind = 'S' AND n.nspname='{$c_schema}' 
+                AND n.oid = c.relnamespace"; 
 
 		return $this->selectSet( $sql );
 	}
@@ -7216,28 +7222,23 @@ class Postgres extends ADODB_base {
 	 * @return A recordset
 	 */
 	function getProcesses($database = null) {
-			$sql = "SELECT pid, datname, usename, pid, waiting, state_change as query_start,
-                  case when state='idle in transaction' then '<IDLE> in transaction' when state = 'idle' then '<IDLE>' else query end as query 
+		if ($database === null){
+			$sql = "SELECT datname, usename, pid, 
+                    case when wait_event is null then 'false' else wait_event_type || '::' || wait_event end as waiting, 
+                    case when state='idle in transaction' then '<IDLE> in transaction' when state = 'idle' then '<IDLE>' else query end as query 
+                    query_start, application_name, client_addr, 
 				FROM pg_catalog.pg_stat_activity
 				ORDER BY datname, usename, pid";
-		if ($database !== null) {
-			$this->clean($database);
-			$dbstmt = "WHERE datname='{$database}'";
 		}else {
-			$dbstmt =  "";
+			$sql = "SELECT datname, usename, pid, 
+                    case when wait_event is null then 'false' else wait_event_type || '::' || wait_event end as waiting, 
+                    query_start, application_name, client_addr, 
+                  case when state='idle in transaction' then '<IDLE> in transaction' when state = 'idle' then '<IDLE>' else query end as query 
+				FROM pg_catalog.pg_stat_activity
+				WHERE datname='{$database}'
+				ORDER BY usename, pid";
 		}
-		return $this->selectSet("
-			SELECT
-				*,
-				date_trunc('seconds', now() - query_start) as started_ago
-			FROM pg_catalog.pg_stat_activity
-			{$dbstmt}
-			ORDER BY
-				query = '<IDLE>' ASC,
-				datname,
-				usename,
-				pid
-		");
+		return $this->selectSet($sql);
 	}
 
 	/**

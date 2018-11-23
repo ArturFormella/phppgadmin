@@ -493,13 +493,22 @@
 				return;
 			}
 		}
+		
+		// maximum of rows
+		$max_rows = PHP_INT_MAX;
+		
+		// If the user checked paginating, the max rows are used from the config 
+		if (isset($_REQUEST['paginate']))
+		{
+		  $max_rows = $conf['max_rows'];
+		}
 
 		// Retrieve page from query.  $max_pages is returned by reference.
 		$rs = $data->browseQuery($type, 
 			isset($object) ? $object : null, 
 			isset($_SESSION['sqlquery']) ? $_SESSION['sqlquery'] : null,
 			$_REQUEST['sortkey'], $_REQUEST['sortdir'], $_REQUEST['page'],
-			$conf['max_rows'], $max_pages);
+		  $max_rows, $max_pages);
 
 		$fkey_information =& getFKInfo();
 
@@ -538,7 +547,9 @@
 		}
 		//$query = isset($_REQUEST['query'])? $_REQUEST['query'] : "select * from {$_REQUEST['schema']}.{$object};";
 		echo $query;
-		echo '</textarea><br><input type="submit"/></form>';
+		echo '</textarea>';
+		echo "<p><input type=\"checkbox\" id=\"paginate\" name=\"paginate\" value=\"on\" ", (isset($_REQUEST['paginate']) ? ' checked="checked"' : ''), " /><label for=\"paginate\">{$lang['strpaginate']}</label></p>\n";
+		echo '<br><input type="submit"/></form>';
 
 		if (is_object($rs) && $rs->recordCount() > 0) {
 			// Show page navigation
@@ -672,6 +683,15 @@
 		}
 		else echo "<p>{$lang['strnodata']}</p>\n";
 
+		if (empty($_REQUEST['schema']))
+		{
+		  $_REQUEST['schema'] = null;
+		}
+		if (empty($object))
+		{
+		  $object = null;
+		}
+		
 		// Navigation links
 		$navlinks = array(
 			'empty' => array (

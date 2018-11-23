@@ -94,10 +94,15 @@
 		unset($_POST['paginate']);
 		unset($_GET['paginate']);
 	}
+	
+	// check, if the query is a select statement
+	$pattern = '/^SELECT\s+(\w+|\s+|\*)+ FROM/i';
+	$is_select_query = preg_match($pattern, $_SESSION['sqlquery']) == 1;
+  
 	// Check to see if pagination has been specified. In that case, send to display
 	// script for pagination
 	/* if a file is given or the request is an explain, do not paginate */
-	if (isset($_REQUEST['paginate']) && !(isset($_FILES['script']) && $_FILES['script']['size'] > 0)
+	if (isset($_REQUEST['paginate']) && $is_select_query && !(isset($_FILES['script']) && $_FILES['script']['size'] > 0)
 			&& (preg_match('/^\s*explain/i', $_SESSION['sqlquery']) == 0)) {
 		include('./display.php');
 		exit;

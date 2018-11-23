@@ -1327,10 +1327,17 @@
 		 */
 		function getLastTabURL($section) {
 			global $data;
-
+			global $conf;
+      
 			$tabs = $this->getNavTabs($section);
-
-			if (isset($_SESSION['webdbLastTab'][$section]) && isset($tabs[$_SESSION['webdbLastTab'][$section]]))
+      
+			if (isset($conf['force_tab_sections']) && isset($conf['force_tab_sections'][$section]) && isset($tabs[$_SESSION['webdbLastTab'][$section]]))
+			{
+			  /* if set in the config, using a forced url for each section */
+			  $tab = $tabs[$_SESSION['webdbLastTab'][$section]];
+			  $tab = $conf['force_tab_sections'][$section];
+			}
+			else if (isset($_SESSION['webdbLastTab'][$section]) && isset($tabs[$_SESSION['webdbLastTab'][$section]]))
 				$tab = $tabs[$_SESSION['webdbLastTab'][$section]];
 			else
 				$tab = reset($tabs);

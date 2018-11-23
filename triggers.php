@@ -181,7 +181,9 @@
 		/* Populate functions */
 		$sel0 = new XHTML_Select('formFunction');
 		while (!$funcs->EOF) {
-			$sel0->add(new XHTML_Option($funcs->fields['proname']));
+			$XHTML_Opt = new XHTML_Option($funcs->fields['proname']);
+			$sel0->add($XHTML_Opt);
+			//$sel0->add(new XHTML_Option($funcs->fields['proname']));
 			$funcs->moveNext();
 		}
 

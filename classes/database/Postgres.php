@@ -476,8 +476,7 @@ class Postgres extends ADODB_base {
 				END as dbsize, pdb.datcollate, pdb.datctype
 			FROM pg_catalog.pg_database pdb
 				LEFT JOIN pg_catalog.pg_roles pr ON (pdb.datdba = pr.oid)
-			WHERE true
-				and has_database_privilege( pdb.oid,'CONNECT')
+			WHERE pg_catalog.has_database_privilege(current_user, pdb.oid, 'CONNECT')
 				{$where}
 				{$clause}
 			{$orderby}";
@@ -1074,7 +1073,7 @@ class Postgres extends ADODB_base {
 			FROM pg_catalog.pg_class c
 			     LEFT JOIN pg_catalog.pg_user u ON u.usesysid = c.relowner
 			     LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-			WHERE c.relkind = 'r'
+			WHERE (c.relkind = 'r' OR c.relkind = 'p')
 			      AND n.nspname = '{$c_schema}'
 			      AND n.oid = c.relnamespace
 			      AND c.relname = '{$table}'
@@ -1107,7 +1106,7 @@ class Postgres extends ADODB_base {
 						(SELECT spcname FROM pg_catalog.pg_tablespace pt WHERE pt.oid=c.reltablespace) AS tablespace
 					FROM pg_catalog.pg_class c
 					LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-					WHERE (c.relkind = 'r' OR c.relkind = 'm' OR c.relkind = 't' OR c.relkind = 'f')
+					WHERE (c.relkind = 'r' OR c.relkind = 'm' OR c.relkind = 't' OR c.relkind = 'f' OR c.relkind = 'p')
 					AND has_table_privilege( c.oid, 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') 
 					AND nspname='{$c_schema}'
 					ORDER BY c.relname";
@@ -2389,7 +2388,7 @@ class Postgres extends ADODB_base {
 			$sql = "SELECT c.oid, nspname, relname, pg_catalog.array_to_string(reloptions, E',') AS reloptions
 				FROM pg_class c
 					LEFT JOIN pg_namespace n ON n.oid = c.relnamespace
-				WHERE c.relkind = 'r'::\"char\"
+				WHERE (c.relkind = 'r' OR c.relkind = 'p')
 					AND n.nspname NOT IN ('pg_catalog','information_schema')
 					AND c.reloptions IS NOT NULL
 					AND c.relname = '{$table}' AND n.nspname = '{$c_schema}'
@@ -2399,7 +2398,7 @@ class Postgres extends ADODB_base {
 			$sql = "SELECT c.oid, nspname, relname, pg_catalog.array_to_string(reloptions, E',') AS reloptions
 				FROM pg_class c
 					LEFT JOIN pg_namespace n ON n.oid = c.relnamespace
-				WHERE c.relkind = 'r'::\"char\"
+				WHERE (c.relkind = 'r' OR c.relkind = 'p')
 					AND n.nspname NOT IN ('pg_catalog','information_schema')
 					AND c.reloptions IS NOT NULL
 				ORDER BY nspname, relname";
@@ -7748,7 +7747,7 @@ class Postgres extends ADODB_base {
 	 * @return -4 unknown type
 	 * @return -5 failed setting transaction read only
 	 */
-	function browseQuery($type, $table, $query, $sortkey, $sortdir, $page, $page_size, &$max_pages) {
+	function browseQuery($type, $table, $query, $sortkey, $sortdir, $page, $page_size, &$max_pages, &$total) {
 		// Check that we're not going to divide by zero
 		if (!is_numeric($page_size) || $page_size != (int)$page_size || $page_size <= 0) return -3;
 

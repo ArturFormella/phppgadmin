@@ -15,8 +15,8 @@ class Postgres95 extends Postgres96 {
 	 * Constructor
 	 * @param $conn The database connection
 	 */
-	function Postgres95($conn) {
-		$this->Postgres($conn);
+	function __construct($conn) {
+		parent::__construct($conn);
 	}
 
 	// Help functions
@@ -25,8 +25,6 @@ class Postgres95 extends Postgres96 {
 		include_once('./help/PostgresDoc95.php');
 		return $this->help_page;
 	}
-
-
 	/**
 	 * Returns all available process information.
 	 * @param $database (optional) Find only connections to specified database
@@ -49,7 +47,6 @@ class Postgres95 extends Postgres96 {
 
 		return $this->selectSet($sql);
 	}
-
 
 }
 ?>

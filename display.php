@@ -392,9 +392,10 @@
 		$fkinfo =& getFKInfo();
 
 		$max_pages = 1;
+		$total_rows = 0;
 		// Retrieve page from query.  $max_pages is returned by reference.
 		$rs = $data->browseQuery('SELECT', $_REQUEST['table'], $_REQUEST['query'],  
-			null, null, 1, 1, $max_pages);
+			null, null, 1, 1, $max_pages, $total_rows);
 
 		echo "<a href=\"\" style=\"display:table-cell;\" class=\"fk_delete\"><img alt=\"[delete]\" src=\"". $misc->icon('Delete') ."\" /></a>\n";
 		echo "<div style=\"display:table-cell;\">";
@@ -496,9 +497,9 @@
 		
 		// maximum of rows
 		$max_rows = PHP_INT_MAX;
-		
+		$total_rows = 0;
 		// If the user checked paginating, the max rows are used from the config 
-		if (isset($_REQUEST['paginate']))
+		if (!isset($_REQUEST['paginate']) || $_REQUEST['paginate'] == 'on')
 		{
 		  $max_rows = $conf['max_rows'];
 		}
@@ -508,10 +509,9 @@
 			isset($object) ? $object : null, 
 			isset($_SESSION['sqlquery']) ? $_SESSION['sqlquery'] : null,
 			$_REQUEST['sortkey'], $_REQUEST['sortdir'], $_REQUEST['page'],
-		  $max_rows, $max_pages);
+		  $max_rows, $max_pages, $total_rows);
 
 		$fkey_information =& getFKInfo();
-
 		// Build strings for GETs in array
 		$_gets = array(
 			'server' => $_REQUEST['server'],
@@ -548,8 +548,10 @@
 		//$query = isset($_REQUEST['query'])? $_REQUEST['query'] : "select * from {$_REQUEST['schema']}.{$object};";
 		echo $query;
 		echo '</textarea>';
-		echo "<p><input type=\"checkbox\" id=\"paginate\" name=\"paginate\" value=\"on\" ", (isset($_REQUEST['paginate']) ? ' checked="checked"' : ''), " /><label for=\"paginate\">{$lang['strpaginate']}</label></p>\n";
-		echo '<br><input type="submit"/></form>';
+
+		$paginate = !isset($_REQUEST['paginate']) || $_REQUEST['paginate'] == 'on';
+		echo "<input type='hidden' value='off' name='paginate'><input type=\"checkbox\" id=\"paginate\" name=\"paginate\" value=\"on\" ", ($paginate ? ' checked="checked"' : ''), " /><label for=\"paginate\">{$lang['strpaginate']}</label>\n";
+		echo '<br><input type="submit"/> ('. $lang['strestimatedrowcount'] . ': '. $total_rows.')</form>';
 
 		if (is_object($rs) && $rs->recordCount() > 0) {
 			// Show page navigation

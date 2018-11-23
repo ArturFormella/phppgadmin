@@ -1078,7 +1078,7 @@ class Postgres extends ADODB_base {
 			      AND n.nspname = '{$c_schema}'
 			      AND n.oid = c.relnamespace
 			      AND c.relname = '{$table}'
-					and has_table_privilege( n.nspname || '.' || c.relname, 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') 
+					and has_table_privilege( '\"' || n.nspname || '\".\"' || c.relname||'\"', 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') 
 				  ";
  
 		return $this->selectSet($sql);
@@ -1097,7 +1097,7 @@ class Postgres extends ADODB_base {
 			$sql = "SELECT schemaname AS nspname, tablename AS relname, tableowner AS relowner
 					FROM pg_catalog.pg_tables
 					WHERE schemaname NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
-					AND has_table_privilege( schemaname || '.'|| tablename, 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') 
+					AND has_table_privilege( '\"' || schemaname || '\".\"'|| tablename||'\"', 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') 
 					ORDER BY schemaname, tablename";
 		} else {
 			// r = ordinary table, i = index, S = sequence, v = view, m = materialized view, c = composite type, t = TOAST table, f = foreign table
@@ -3038,7 +3038,7 @@ class Postgres extends ADODB_base {
 			FROM pg_catalog.pg_class c
 				LEFT JOIN pg_catalog.pg_namespace n ON (n.oid = c.relnamespace)
 			WHERE (c.relname = '{$view}') AND n.nspname='{$c_schema}'
-			AND has_table_privilege(  nspname || '.'|| relname, 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') 
+			AND has_table_privilege( '\"' || nspname || '\".\"'|| relname||'\"', 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') 
 			";
 
 		return $this->selectSet($sql);
@@ -3058,7 +3058,7 @@ class Postgres extends ADODB_base {
 			FROM pg_catalog.pg_class c
 				LEFT JOIN pg_catalog.pg_namespace n ON (n.oid = c.relnamespace)
 			WHERE (n.nspname='{$c_schema}') AND (c.relkind = 'v'::\"char\" OR (c.relkind = 'm'::\"char\") )
-			AND has_table_privilege(  nspname || '.'|| relname, 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') 
+			AND has_table_privilege( '\"' || nspname || '\".\"'|| relname||'\"', 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') 
 			ORDER BY relname";
 
 		return $this->selectSet($sql);
@@ -7233,7 +7233,6 @@ class Postgres extends ADODB_base {
 			FROM pg_catalog.pg_stat_activity
 			{$dbstmt}
 			ORDER BY
-				waiting DESC,
 				query = '<IDLE>' ASC,
 				datname,
 				usename,

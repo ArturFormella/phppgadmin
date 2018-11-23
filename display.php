@@ -529,11 +529,11 @@
 		if (isset($_REQUEST['query'])) {
 			$query = $_REQUEST['query'];
 		} else {
-			$query = "SELECT * FROM {$_REQUEST['schema']}";
+			$query = "SELECT * FROM \"{$_REQUEST['schema']}\"";
 			if ($_REQUEST['subject'] == 'view') {
-				$query = "{$query}.{$_REQUEST['view']};";
+				$query = "{$query}.\"{$_REQUEST['view']}\";";
 			} else {
-				$query = "{$query}.{$_REQUEST['table']};";
+				$query = "{$query}.\"{$_REQUEST['table']}\";";
 			}
 		}
 		//$query = isset($_REQUEST['query'])? $_REQUEST['query'] : "select * from {$_REQUEST['schema']}.{$object};";

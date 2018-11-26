@@ -594,7 +594,7 @@
 		$misc->printTrail('database');
 		$misc->printTabs('database','sql');
 		echo "<p>{$lang['strentersql']}</p>\n";
-		echo "<form action=\"sql.php\" method=\"post\" enctype=\"multipart/form-data\">\n";
+		echo "<form action=\"sql.php?server=".$_REQUEST['server']."&database=".$_REQUEST['database']."\" method=\"post\" enctype=\"multipart/form-data\">\n";
 		echo "<p>{$lang['strsql']}<br />\n";
 		echo "<textarea style=\"width:100%;\" rows=\"20\" cols=\"50\" name=\"query\">",
 			htmlspecialchars($_SESSION['sqlquery']), "</textarea></p>\n";

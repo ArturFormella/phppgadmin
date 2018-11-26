@@ -94,10 +94,15 @@
 		unset($_POST['paginate']);
 		unset($_GET['paginate']);
 	}
+	
+	// check, if the query is a select statement
+	$pattern = '/^SELECT\s+(\w+|\s+|\*)+ FROM/i';
+	$is_select_query = preg_match($pattern, $_SESSION['sqlquery']) == 1;
+  
 	// Check to see if pagination has been specified. In that case, send to display
 	// script for pagination
 	/* if a file is given or the request is an explain, do not paginate */
-	if (isset($_REQUEST['paginate']) && !(isset($_FILES['script']) && $_FILES['script']['size'] > 0)
+	if (isset($_REQUEST['paginate']) && $is_select_query && !(isset($_FILES['script']) && $_FILES['script']['size'] > 0)
 			&& (preg_match('/^\s*explain/i', $_SESSION['sqlquery']) == 0)) {
 		include('./display.php');
 		exit;
@@ -190,6 +195,31 @@
 	
 	echo "<p>{$lang['strsqlexecuted']}</p>\n";
 			
+	echo "<p>{$lang['strentersql']}</p>\n";
+	echo "<form action=\"sql.php?server=".$_REQUEST['server']."&database=".$_REQUEST['database']."\" method=\"post\" enctype=\"multipart/form-data\">\n";
+	echo "<p>{$lang['strsql']}<br />\n";
+	echo "<textarea style=\"width:100%;\" rows=\"20\" cols=\"50\" name=\"query\">",
+	htmlspecialchars($_SESSION['sqlquery']), "</textarea></p>\n";
+	
+	// Check that file uploads are enabled
+	if (ini_get('file_uploads')) {
+	  // Don't show upload option if max size of uploads is zero
+	  $max_size = $misc->inisizeToBytes(ini_get('upload_max_filesize'));
+	  if (is_double($max_size) && $max_size > 0) {
+	    echo "<p><input type=\"hidden\" name=\"MAX_FILE_SIZE\" value=\"{$max_size}\" />\n";
+	    echo "<label for=\"script\">{$lang['struploadscript']}</label> <input id=\"script\" name=\"script\" type=\"file\" /></p>\n";
+	  }
+	}
+	
+	echo "<p><input type=\"checkbox\" id=\"paginate\" name=\"paginate\"", (isset($_REQUEST['paginate']) ? ' checked="checked"' : ''), " /><label for=\"paginate\">{$lang['strpaginate']}</label></p>\n";
+	echo "<p><input type=\"submit\" name=\"execute\" accesskey=\"r\" value=\"{$lang['strexecute']}\" />\n";
+	echo $misc->form;
+	echo "<input type=\"reset\" accesskey=\"q\" value=\"{$lang['strreset']}\" /></p>\n";
+	echo "</form>\n";
+	
+	// Default focus
+	$misc->setFocus('forms[0].query');
+	
 	$navlinks = array();
 	$fields = array(
 		'server' => $_REQUEST['server'],
@@ -212,20 +242,7 @@
 			'content' => $lang['strback']
 		);
 	}
-
-	// Edit		
-	$navlinks['alter'] = array (
-		'attr'=> array (
-			'href' => array (
-				'url' => 'database.php',
-				'urlvars' => array_merge($fields, array (
-					'action' => 'sql',
-				))
-			)
-		),
-		'content' => $lang['streditsql']
-	);
-
+  
 	// Create view and download
 	if (isset($_SESSION['sqlquery']) && isset($rs) && is_object($rs) && $rs->recordCount() > 0) {
 		// Report views don't set a schema, so we need to disable create view in that case

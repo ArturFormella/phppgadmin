@@ -127,9 +127,8 @@
 				echo "<label for=\"script\">{$lang['struploadscript']}</label> <input id=\"script\" name=\"script\" type=\"file\" /></p>\n";
 			}
 		}
-
-		echo "<p><label for=\"paginate\"><input type=\"checkbox\" id=\"paginate\" name=\"paginate\"", (isset($_REQUEST['paginate']) ? ' checked="checked"' : ''), " />&nbsp;{$lang['strpaginate']}</label></p>\n";
-		
+		$paginate = !isset($_REQUEST['paginate']) || $_REQUEST['paginate'] == 'on';
+		echo "<p><label for=\"paginate\"><input type=\"checkbox\" id=\"paginate\" name=\"paginate\"", ($paginate ? ' checked="checked"' : ''), " />&nbsp;{$lang['strpaginate']}</label></p>\n";
 		echo "<p><input type=\"submit\" name=\"execute\" accesskey=\"r\" value=\"{$lang['strexecute']}\" />\n";
 		echo "<input type=\"reset\" accesskey=\"q\" value=\"{$lang['strreset']}\" /></p>\n";
 		echo "</form>\n";

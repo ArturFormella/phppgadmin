@@ -477,14 +477,14 @@
 			}
 
 			// Create the connection object and make the connection
-			$_connection = new Connection(
-				$server_info['host'],
-				$server_info['port'],
-				$server_info['sslmode'],
-				$server_info['username'],
-				$server_info['password'],
-				$database
-			);
+				$_connection = new Connection(
+					$server_info['host'],
+					$server_info['port'],
+					$server_info['sslmode'],
+					$server_info['username'],
+					$server_info['password'],
+					$database
+				);
 
 			// Get the name of the database driver we need to use.
 			// The description of the server is returned in $platform.
@@ -492,17 +492,18 @@
 			if ($_type === null) {
 				printf($lang['strpostgresqlversionnotsupported'], 0);
 				exit;
+
 			}
-			$this->setServerInfo('platform', $platform, $server_id);
-			$this->setServerInfo('pgVersion', $_connection->conn->pgVersion, $server_id);
-
-			// Create a database wrapper class for easy manipulation of the
-			// connection.
-			include_once('./classes/database/' . $_type . '.php');
-			$data = new $_type($_connection->conn);
-			$data->platform = $_connection->platform;
-
-			/* we work on UTF-8 only encoding */
+		    $this->setServerInfo('platform', $platform, $server_id);
+		    $this->setServerInfo('pgVersion', $_connection->conn->pgVersion, $server_id);
+		    
+		    // Create a database wrapper class for easy manipulation of the
+		    // connection.
+		    include_once('./classes/database/' . $_type . '.php');
+		    $data = new $_type($_connection->conn);
+		    $data->platform = $_connection->platform;
+		    
+		    /* we work on UTF-8 only encoding */
 			$data->execute("SET client_encoding TO 'UTF-8'");
 
 			if ($data->hasByteaHexDefault()) {
@@ -682,8 +683,10 @@
 			echo "<table class=\"tabs\"><tr>\n";
 			#echo "<div class=\"tabs\">\n";
 
-			# FIXME: don't count hidden tabs
-			$width = (int)(100 / count($tabs)).'%';
+			if (count($tabs) > 0) 
+				$width = (int)(100 / count($tabs)).'%';
+			else
+				$width = 1;
 
 			foreach ($tabs as $tab_id => $tab) {
 				$active = ($tab_id == $activetab) ? ' active' : '';
@@ -1327,10 +1330,17 @@
 		 */
 		function getLastTabURL($section) {
 			global $data;
-
+			global $conf;
+      
 			$tabs = $this->getNavTabs($section);
-
-			if (isset($_SESSION['webdbLastTab'][$section]) && isset($tabs[$_SESSION['webdbLastTab'][$section]]))
+      
+			if (isset($conf['force_tab_sections']) && isset($conf['force_tab_sections'][$section]) && isset($tabs[$_SESSION['webdbLastTab'][$section]]))
+			{
+			  /* if set in the config, using a forced url for each section */
+			  $tab = $tabs[$_SESSION['webdbLastTab'][$section]];
+			  $tab = $conf['force_tab_sections'][$section];
+			}
+			else if (isset($_SESSION['webdbLastTab'][$section]) && isset($tabs[$_SESSION['webdbLastTab'][$section]]))
 				$tab = $tabs[$_SESSION['webdbLastTab'][$section]];
 			else
 				$tab = reset($tabs);
@@ -1454,7 +1464,7 @@
 				</script>";
 			}
 			else {
-				echo "<span class=\"appname\">{$appName}</span> <span class=\"version\">{$appVersion}</span>";
+				echo "<span class=\"appname\">{$appName}</span> <span class=\"version\">{$appVersion} (PHP ".phpversion().")</span>";
 			}
 /*
 			echo "<td style=\"text-align: right; width: 1%\">";

@@ -11,7 +11,7 @@ include_once('./classes/database/ADODB_base.php');
 
 class Postgres extends ADODB_base {
 
-	var $major_version = 9.5;
+	var $major_version = 12;
 	// Max object name length
 	var $_maxNameLen = 63;
 	// Store the current schema
@@ -476,8 +476,7 @@ class Postgres extends ADODB_base {
 				END as dbsize, pdb.datcollate, pdb.datctype
 			FROM pg_catalog.pg_database pdb
 				LEFT JOIN pg_catalog.pg_roles pr ON (pdb.datdba = pr.oid)
-			WHERE true
-				and has_database_privilege( pdb.oid,'CONNECT')
+			WHERE pg_catalog.has_database_privilege(current_user, pdb.oid, 'CONNECT')
 				{$where}
 				{$clause}
 			{$orderby}";
@@ -1074,11 +1073,11 @@ class Postgres extends ADODB_base {
 			FROM pg_catalog.pg_class c
 			     LEFT JOIN pg_catalog.pg_user u ON u.usesysid = c.relowner
 			     LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-			WHERE c.relkind = 'r'
+			WHERE (c.relkind = 'r' OR c.relkind = 'p')
 			      AND n.nspname = '{$c_schema}'
 			      AND n.oid = c.relnamespace
 			      AND c.relname = '{$table}'
-					and has_table_privilege( n.nspname || '.' || c.relname, 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') 
+					and has_table_privilege( '\"' || n.nspname || '\".\"' || c.relname||'\"', 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') 
 				  ";
  
 		return $this->selectSet($sql);
@@ -1097,7 +1096,7 @@ class Postgres extends ADODB_base {
 			$sql = "SELECT schemaname AS nspname, tablename AS relname, tableowner AS relowner
 					FROM pg_catalog.pg_tables
 					WHERE schemaname NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
-					AND has_table_privilege( schemaname || '.'|| tablename, 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') 
+					AND has_table_privilege( '\"' || schemaname || '\".\"'|| tablename||'\"', 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') 
 					ORDER BY schemaname, tablename";
 		} else {
 			// r = ordinary table, i = index, S = sequence, v = view, m = materialized view, c = composite type, t = TOAST table, f = foreign table
@@ -1107,7 +1106,7 @@ class Postgres extends ADODB_base {
 						(SELECT spcname FROM pg_catalog.pg_tablespace pt WHERE pt.oid=c.reltablespace) AS tablespace
 					FROM pg_catalog.pg_class c
 					LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-					WHERE (c.relkind = 'r' OR c.relkind = 'm' OR c.relkind = 't' OR c.relkind = 'f')
+					WHERE (c.relkind = 'r' OR c.relkind = 'm' OR c.relkind = 't' OR c.relkind = 'f' OR c.relkind = 'p')
 					AND has_table_privilege( c.oid, 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') 
 					AND nspname='{$c_schema}'
 					ORDER BY c.relname";
@@ -2389,7 +2388,7 @@ class Postgres extends ADODB_base {
 			$sql = "SELECT c.oid, nspname, relname, pg_catalog.array_to_string(reloptions, E',') AS reloptions
 				FROM pg_class c
 					LEFT JOIN pg_namespace n ON n.oid = c.relnamespace
-				WHERE c.relkind = 'r'::\"char\"
+				WHERE (c.relkind = 'r' OR c.relkind = 'p')
 					AND n.nspname NOT IN ('pg_catalog','information_schema')
 					AND c.reloptions IS NOT NULL
 					AND c.relname = '{$table}' AND n.nspname = '{$c_schema}'
@@ -2399,7 +2398,7 @@ class Postgres extends ADODB_base {
 			$sql = "SELECT c.oid, nspname, relname, pg_catalog.array_to_string(reloptions, E',') AS reloptions
 				FROM pg_class c
 					LEFT JOIN pg_namespace n ON n.oid = c.relnamespace
-				WHERE c.relkind = 'r'::\"char\"
+				WHERE (c.relkind = 'r' OR c.relkind = 'p')
 					AND n.nspname NOT IN ('pg_catalog','information_schema')
 					AND c.reloptions IS NOT NULL
 				ORDER BY nspname, relname";
@@ -2646,14 +2645,20 @@ class Postgres extends ADODB_base {
 		$this->fieldClean($sequence);
 		$this->clean($c_sequence);
 
-		$sql = "
-			SELECT c.relname AS seqname, s.*,
-				pg_catalog.obj_description(s.tableoid, 'pg_class') AS seqcomment,
+        $sql = "
+            SELECT
+                c.relname AS seqname, s.*, 
+                m.seqstart AS start_value, m.seqincrement AS increment_by, m.seqmax AS max_value, m.seqmin AS min_value, 
+                m.seqcache AS cache_value, m.seqcycle AS is_cycled,  
+			    pg_catalog.obj_description(m.seqrelid, 'pg_class') AS seqcomment,
 				u.usename AS seqowner, n.nspname
-			FROM \"{$sequence}\" AS s, pg_catalog.pg_class c, pg_catalog.pg_user u, pg_catalog.pg_namespace n
-			WHERE c.relowner=u.usesysid AND c.relnamespace=n.oid
-				AND c.relname = '{$c_sequence}' AND c.relkind = 'S' AND n.nspname='{$c_schema}'
-				AND n.oid = c.relnamespace";
+            FROM
+                \"{$sequence}\" AS s, pg_catalog.pg_sequence m,  
+                pg_catalog.pg_class c, pg_catalog.pg_user u, pg_catalog.pg_namespace n                       
+            WHERE
+                c.relowner=u.usesysid AND c.relnamespace=n.oid 
+                AND c.oid = m.seqrelid AND c.relname = '{$c_sequence}' AND c.relkind = 'S' AND n.nspname='{$c_schema}' 
+                AND n.oid = c.relnamespace"; 
 
 		return $this->selectSet( $sql );
 	}
@@ -3038,7 +3043,7 @@ class Postgres extends ADODB_base {
 			FROM pg_catalog.pg_class c
 				LEFT JOIN pg_catalog.pg_namespace n ON (n.oid = c.relnamespace)
 			WHERE (c.relname = '{$view}') AND n.nspname='{$c_schema}'
-			AND has_table_privilege(  nspname || '.'|| relname, 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') 
+			AND has_table_privilege( '\"' || nspname || '\".\"'|| relname||'\"', 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') 
 			";
 
 		return $this->selectSet($sql);
@@ -3058,7 +3063,7 @@ class Postgres extends ADODB_base {
 			FROM pg_catalog.pg_class c
 				LEFT JOIN pg_catalog.pg_namespace n ON (n.oid = c.relnamespace)
 			WHERE (n.nspname='{$c_schema}') AND (c.relkind = 'v'::\"char\" OR (c.relkind = 'm'::\"char\") )
-			AND has_table_privilege(  nspname || '.'|| relname, 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') 
+			AND has_table_privilege( '\"' || nspname || '\".\"'|| relname||'\"', 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') 
 			ORDER BY relname";
 
 		return $this->selectSet($sql);
@@ -4169,7 +4174,7 @@ class Postgres extends ADODB_base {
 			$c_schema = $this->_schema;
 			$this->clean($c_schema);
 			$where = "n.nspname = '{$c_schema}'";
-			$where .= " AND p.proname not LIKE 'sp\_%'";
+		//	$where .= " AND p.proname not LIKE 'sp\_%'";
 			$distinct = '';
 		}
 
@@ -7216,29 +7221,23 @@ class Postgres extends ADODB_base {
 	 * @return A recordset
 	 */
 	function getProcesses($database = null) {
-			$sql = "SELECT pid, datname, usename, pid, waiting, state_change as query_start,
-                  case when state='idle in transaction' then '<IDLE> in transaction' when state = 'idle' then '<IDLE>' else query end as query 
+		if ($database === null){
+			$sql = "SELECT datname, usename, pid, 
+                    case when wait_event is null then 'false' else wait_event_type || '::' || wait_event end as waiting, 
+                    case when state='idle in transaction' then '<IDLE> in transaction' when state = 'idle' then '<IDLE>' else query end as query 
+                    query_start, application_name, client_addr, 
 				FROM pg_catalog.pg_stat_activity
 				ORDER BY datname, usename, pid";
-		if ($database !== null) {
-			$this->clean($database);
-			$dbstmt = "WHERE datname='{$database}'";
 		}else {
-			$dbstmt =  "";
+			$sql = "SELECT datname, usename, pid, 
+                    case when wait_event is null then 'false' else wait_event_type || '::' || wait_event end as waiting, 
+                    query_start, application_name, client_addr, 
+                  case when state='idle in transaction' then '<IDLE> in transaction' when state = 'idle' then '<IDLE>' else query end as query 
+				FROM pg_catalog.pg_stat_activity
+				WHERE datname='{$database}'
+				ORDER BY usename, pid";
 		}
-		return $this->selectSet("
-			SELECT
-				*,
-				date_trunc('seconds', now() - query_start) as started_ago
-			FROM pg_catalog.pg_stat_activity
-			{$dbstmt}
-			ORDER BY
-				waiting DESC,
-				query = '<IDLE>' ASC,
-				datname,
-				usename,
-				pid
-		");
+		return $this->selectSet($sql);
 	}
 
 	/**
@@ -7748,7 +7747,7 @@ class Postgres extends ADODB_base {
 	 * @return -4 unknown type
 	 * @return -5 failed setting transaction read only
 	 */
-	function browseQuery($type, $table, $query, $sortkey, $sortdir, $page, $page_size, &$max_pages) {
+	function browseQuery($type, $table, $query, $sortkey, $sortdir, $page, $page_size, &$max_pages, &$total) {
 		// Check that we're not going to divide by zero
 		if (!is_numeric($page_size) || $page_size != (int)$page_size || $page_size <= 0) return -3;
 
@@ -7782,7 +7781,7 @@ class Postgres extends ADODB_base {
 			$query2 =  preg_replace('/ORDER BY .*/i', '', $query2);		
 			$count =  preg_replace('/LIMIT .*/i', '', $query2);
 		}else{
-			$count = "SELECT COUNT(*) AS total FROM ($query) AS sub4";
+		  $count = "SELECT COUNT(*) AS total FROM ($query\n) AS sub4";
 		}
 
 		// Open a transaction
@@ -7834,7 +7833,7 @@ class Postgres extends ADODB_base {
 		else $orderby = '';
 
 		// Actually retrieve the rows, with offset and limit
-		$rs = $this->selectSet("SELECT * FROM ({$query}) AS sub {$orderby} LIMIT {$page_size} OFFSET " . ($page - 1) * $page_size);
+		$rs = $this->selectSet("SELECT * FROM ({$query}\n) AS sub {$orderby} LIMIT {$page_size} OFFSET " . ($page - 1) * $page_size);
 		$status = $this->endTransaction();
 		if ($status != 0) {
 			$this->rollbackTransaction();

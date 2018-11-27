@@ -718,16 +718,16 @@ class Postgres extends ADODB_base {
 			SELECT 'SCHEMA' AS type, oid, NULL AS schemaname, NULL AS relname, nspname AS name
 				FROM pg_catalog.pg_namespace pn WHERE nspname ILIKE {$term} {$where}
 			UNION ALL
-			SELECT CASE WHEN relkind='r' THEN 'TABLE' WHEN relkind='v' THEN 'VIEW' WHEN relkind='S' THEN 'SEQUENCE' END, pc.oid,
+			SELECT CASE WHEN relkind='r' OR relkind='f'  THEN 'TABLE' WHEN relkind='v' OR relkind='m' THEN 'VIEW' WHEN relkind='S' THEN 'SEQUENCE' END, pc.oid,
 				pn.nspname, NULL, pc.relname FROM pg_catalog.pg_class pc, pg_catalog.pg_namespace pn
-				WHERE pc.relnamespace=pn.oid AND relkind IN ('r', 'v', 'S') AND relname ILIKE {$term} {$where}
+				WHERE pc.relnamespace=pn.oid AND relkind IN ('r', 'v', 'S', 'm', 'f') AND relname ILIKE {$term} {$where}
 			UNION ALL
-			SELECT CASE WHEN pc.relkind='r' THEN 'COLUMNTABLE' ELSE 'COLUMNVIEW' END, NULL, pn.nspname, pc.relname, pa.attname FROM pg_catalog.pg_class pc, pg_catalog.pg_namespace pn,
+			SELECT CASE WHEN pc.relkind='r' OR pc.relkind='f' THEN 'COLUMNTABLE' ELSE 'COLUMNVIEW' END, NULL, pn.nspname, pc.relname, pa.attname FROM pg_catalog.pg_class pc, pg_catalog.pg_namespace pn,
 				pg_catalog.pg_attribute pa WHERE pc.relnamespace=pn.oid AND pc.oid=pa.attrelid
-				AND pa.attname ILIKE {$term} AND pa.attnum > 0 AND NOT pa.attisdropped AND pc.relkind IN ('r', 'v') {$where}
+				AND pa.attname ILIKE {$term} AND pa.attnum > 0 AND NOT pa.attisdropped AND pc.relkind IN ('r', 'v', 'm', 'f') {$where}
 			UNION ALL
 			SELECT 'FUNCTION', pp.oid, pn.nspname, NULL, pp.proname || '(' || pg_catalog.oidvectortypes(pp.proargtypes) || ')' FROM pg_catalog.pg_proc pp, pg_catalog.pg_namespace pn
-				WHERE pp.pronamespace=pn.oid AND NOT pp.proisagg AND pp.proname ILIKE {$term} {$where}
+				WHERE pp.pronamespace=pn.oid AND pp.prokind != 'a' AND pp.proname ILIKE {$term} {$where}
 			UNION ALL
 			SELECT 'INDEX', NULL, pn.nspname, pc.relname, pc2.relname FROM pg_catalog.pg_class pc, pg_catalog.pg_namespace pn,
 				pg_catalog.pg_index pi, pg_catalog.pg_class pc2 WHERE pc.relnamespace=pn.oid AND pc.oid=pi.indrelid
@@ -735,7 +735,7 @@ class Postgres extends ADODB_base {
 				AND NOT EXISTS (
 					SELECT 1 FROM pg_catalog.pg_depend d JOIN pg_catalog.pg_constraint c
 					ON (d.refclassid = c.tableoid AND d.refobjid = c.oid)
-					WHERE d.classid = pc2.tableoid AND d.objid = pc2.oid AND d.deptype = 'i' AND c.contype IN ('u', 'p')
+					WHERE d.classid = pc2.tableoid AND d.objid = pc2.oid AND d.deptype = 'i' AND c.contype IN ('u', 'p', 'x')
 				)
 				AND pc2.relname ILIKE {$term} {$where}
 			UNION ALL
@@ -744,7 +744,7 @@ class Postgres extends ADODB_base {
 				AND CASE WHEN pc2.contype IN ('f', 'c') THEN TRUE ELSE NOT EXISTS (
 					SELECT 1 FROM pg_catalog.pg_depend d JOIN pg_catalog.pg_constraint c
 					ON (d.refclassid = c.tableoid AND d.refobjid = c.oid)
-					WHERE d.classid = pc2.tableoid AND d.objid = pc2.oid AND d.deptype = 'i' AND c.contype IN ('u', 'p')
+					WHERE d.classid = pc2.tableoid AND d.objid = pc2.oid AND d.deptype = 'i' AND c.contype IN ('u', 'p', 'x')
 				) END
 				AND pc2.conname ILIKE {$term} {$where}
 			UNION ALL
@@ -792,7 +792,7 @@ class Postgres extends ADODB_base {
 				UNION ALL
 				SELECT DISTINCT ON (p.proname) 'AGGREGATE', p.oid, pn.nspname, NULL, p.proname FROM pg_catalog.pg_proc p
 					LEFT JOIN pg_catalog.pg_namespace pn ON p.pronamespace=pn.oid
-					WHERE p.proisagg AND p.proname ILIKE {$term} {$where}
+					WHERE p.prokind = 'a' AND p.proname ILIKE {$term} {$where}
 				UNION ALL
 				SELECT DISTINCT ON (po.opcname) 'OPCLASS', po.oid, pn.nspname, NULL, po.opcname FROM pg_catalog.pg_opclass po,
 					pg_catalog.pg_namespace pn WHERE po.opcnamespace=pn.oid
@@ -4195,7 +4195,7 @@ class Postgres extends ADODB_base {
 				INNER JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
 				INNER JOIN pg_catalog.pg_language pl ON pl.oid = p.prolang
 				LEFT JOIN pg_catalog.pg_user u ON u.usesysid = p.proowner
-			WHERE NOT p.proisagg
+			WHERE p.prokind != 'a'
 				AND {$where}
 			ORDER BY p.proname, proresult
 			";
@@ -5901,7 +5901,7 @@ class Postgres extends ADODB_base {
 				a.agginitval, a.aggsortop, u.usename, pg_catalog.obj_description(p.oid, 'pg_proc') AS aggrcomment
 			FROM pg_catalog.pg_proc p, pg_catalog.pg_namespace n, pg_catalog.pg_user u, pg_catalog.pg_aggregate a
 			WHERE n.oid = p.pronamespace AND p.proowner=u.usesysid AND p.oid=a.aggfnoid
-				AND p.proisagg AND n.nspname='{$c_schema}'
+				AND p.prokind = 'a' AND n.nspname='{$c_schema}'
 				AND p.proname='" . $name . "'
 				AND CASE p.proargtypes[0]
 					WHEN 'pg_catalog.\"any\"'::pg_catalog.regtype THEN ''
@@ -5923,7 +5923,7 @@ class Postgres extends ADODB_base {
 			   pg_catalog.obj_description(p.oid, 'pg_proc') AS aggrcomment
 			   FROM pg_catalog.pg_proc p, pg_catalog.pg_namespace n, pg_catalog.pg_user u, pg_catalog.pg_aggregate a
 			   WHERE n.oid = p.pronamespace AND p.proowner=u.usesysid AND p.oid=a.aggfnoid
-			   AND p.proisagg AND n.nspname='{$c_schema}' ORDER BY 1, 2";
+			   AND p.prokind = 'a' AND n.nspname='{$c_schema}' ORDER BY 1, 2";
 
 		return $this->selectSet($sql);
 	}

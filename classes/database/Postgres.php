@@ -7224,7 +7224,8 @@ class Postgres extends ADODB_base {
 		if ($database === null){
 			$sql = "SELECT datname, usename, pid, 
                     case when wait_event is null then 'false' else wait_event_type || '::' || wait_event end as waiting, 
-                    case when state='idle in transaction' then '<IDLE> in transaction' when state = 'idle' then '<IDLE>' else query end as query 
+                    case when state='idle in transaction' then '<IDLE> in transaction' when state = 'idle' then '<IDLE>' else query end as query,
+                    date_trunc('seconds', now() - query_start) as started_ago
                     query_start, application_name, client_addr, 
 				FROM pg_catalog.pg_stat_activity
 				ORDER BY datname, usename, pid";
@@ -7232,7 +7233,8 @@ class Postgres extends ADODB_base {
 			$sql = "SELECT datname, usename, pid, 
                     case when wait_event is null then 'false' else wait_event_type || '::' || wait_event end as waiting, 
                     query_start, application_name, client_addr, 
-                  case when state='idle in transaction' then '<IDLE> in transaction' when state = 'idle' then '<IDLE>' else query end as query 
+                  case when state='idle in transaction' then '<IDLE> in transaction' when state = 'idle' then '<IDLE>' else query end as query,
+                  date_trunc('seconds', now() - query_start) as started_ago
 				FROM pg_catalog.pg_stat_activity
 				WHERE datname='{$database}'
 				ORDER BY usename, pid";

@@ -48,7 +48,10 @@
 				if (strstr($_SERVER['HTTP_USER_AGENT'], 'MSIE') && isset($_SERVER['HTTPS'])) {
 					header('Content-Type: text/plain');
 				}
-				else {
+				else if ($_REQUEST['d_format'] == 'copy_csv' && $_REQUEST['what'] == 'dataonly') {
+					header('Content-Type: application/download');
+					header('Content-Disposition: attachment; filename=dump.csv');
+				} else {
 					header('Content-Type: application/download');
 					header('Content-Disposition: attachment; filename=dump.sql');
 				}
@@ -59,6 +62,8 @@
 				header('Content-Disposition: attachment; filename=dump.sql.gz');
 				break;
 		}
+
+		$allowEcho = $_REQUEST['output'] != 'gzipped' && $_REQUEST['output'] != 'download' && ($_REQUEST['what'] != 'dataonly' || $_REQUEST['d_format'] != 'copy_csv');
 
 		// Set environmental variables that pg_dump uses
 		putenv('PGPASSWORD=' . $server_info['password']);
@@ -96,7 +101,7 @@
 			// the table name in the -t argument and quote both identifiers
 			if ( ((float) $version[1]) >= 8.2 ) {
 				$cmd .= " -t " . $misc->escapeShellArg("\"{$f_schema}\".\"{$f_object}\"");
-            }
+			}
 			else {
 				// If we are 7.4 or higher, assume they are using 7.4 pg_dump and
 				// set dump schema as well.  Also, mixed case dumping has been fixed
@@ -110,7 +115,7 @@
 		if ($_REQUEST['output'] == 'gzipped' && !$dumpall) {
 			$cmd .= " -Z 9";
 		}
-				
+
 		switch ($_REQUEST['what']) {
 			case 'dataonly':
 				$cmd .= ' -a';
@@ -128,21 +133,33 @@
 				break;
 		}
 
+		if ($_REQUEST['subject'] == 'view') {
+			$psql = str_replace("pg_dump", "psql", $server_info['pg_dump_path']);
+			switch ($_REQUEST['what']) {
+				case 'dataonly':
+					$tables = $misc->escapeShellArg("\"{$f_schema}\".\"{$f_object}\"");
+					$cmd = $psql ." -c 'COPY (select * from ". $tables .") TO STDOUT WITH CSV HEADER' 2>&1";
+					break;
+			}
+		}
+
 		if (!$dumpall) {
 			putenv('PGDATABASE=' . $_REQUEST['database']);
 		}
 		$cmd	= $cmd . ' 2>&1';
-		
-	//	echo $cmd;
+
+		if ($allowEcho) {
+			echo "-- ". $cmd ."\n";
+		}
 		// Execute command and return the output to the screen
-		
+
 		passthru($cmd,$err);
 		if($err){
 			echo "\n\nCommand:";
 			var_export($cmd);
 		}
-		//passthru("ls",$err);
 
+		//passthru("ls",$err);
 		//var_export( passthru($cmd));
 	}
 

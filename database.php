@@ -462,6 +462,10 @@
 				'title' => $lang['strstarttime'],
 				'field' => field('started_ago'),
 			),
+			'started_ago' => array(
+				'title' => $lang['application_name'],
+				'field' => field('application_name'),
+			),
 
 			// Build possible actions for our process list
 			'actions'   => array('title' => $lang['stractions']),

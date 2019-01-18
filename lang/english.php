@@ -134,6 +134,7 @@
 	$lang['strpaginate'] = 'Paginate results';
 	$lang['struploadscript'] = 'or upload an SQL script:';
 	$lang['strstarttime'] = 'Start Time';
+	$lang['application_name'] = 'Application';
 	$lang['strfile'] = 'File';
 	$lang['strfileimported'] = 'File imported.';
 	$lang['strtrycred'] = 'Use these credentials for all servers';

@@ -82,34 +82,25 @@
 		echo "<table>\n";
 		echo "<tr><th class=\"data\">{$lang['strformat']}</th><th class=\"data\" colspan=\"2\">{$lang['stroptions']}</th></tr>\n";
 		// Data only
-		echo "<!--\n";
+
 		echo "<tr><th class=\"data left\">";
 		echo "<input type=\"radio\" id=\"what1\" name=\"what\" value=\"dataonly\" /><label for=\"what1\">{$lang['strdataonly']}</label></th>\n";
 		echo "<td>{$lang['strformat']}</td>\n";
 		echo "<td><select name=\"d_format\" >\n";
-		echo "<option value=\"copy\">COPY</option>\n";
-		echo "<option value=\"sql\">SQL</option>\n";
-		echo "<option value=\"csv\">CSV</option>\n";
-		echo "<option value=\"tab\">{$lang['strtabbed']}</option>\n";
-		echo "<option value=\"html\">XHTML</option>\n";
-		echo "<option value=\"xml\">XML</option>\n";
-		echo "</select>\n</td>\n</tr>\n";
-		echo "-->\n";
+		echo "<option value=\"copy_csv\">COPY (CSV)</option>\n";
+		echo "</select>\n";
+		echo "</td>\n</tr>\n";
 
 		// Structure only
 		echo "<tr><th class=\"data left\"><input type=\"radio\" id=\"what2\" name=\"what\" value=\"structureonly\" checked=\"checked\" /><label for=\"what2\">{$lang['strstructureonly']}</label></th>\n";
 		echo "<td><label for=\"s_clean\">{$lang['strdrop']}</label></td><td><input type=\"checkbox\" id=\"s_clean\" name=\"s_clean\" /></td>\n</tr>\n";
 		// Structure and data
-		echo "<!--\n";
 		echo "<tr><th class=\"data left\" rowspan=\"2\">";
-		echo "<input type=\"radio\" id=\"what3\" name=\"what\" value=\"structureanddata\" /><label for=\"what3\">{$lang['strstructureanddata']}</label></th>\n";
+
 		echo "<td>{$lang['strformat']}</td>\n";
 		echo "<td><select name=\"sd_format\">\n";
-		echo "<option value=\"copy\">COPY</option>\n";
 		echo "<option value=\"sql\">SQL</option>\n";
 		echo "</select>\n</td>\n</tr>\n";
-		echo "<td><label for=\"sd_clean\">{$lang['strdrop']}</label></td><td><input type=\"checkbox\" id=\"sd_clean\" name=\"sd_clean\" /></td>\n</tr>\n";
-		echo "-->\n";
 		echo "</table>\n";
 		
 		echo "<h3>{$lang['stroptions']}</h3>\n";

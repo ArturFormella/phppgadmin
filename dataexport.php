@@ -34,7 +34,7 @@
 				// Check to see if they have pg_dump set up and if they do, use that
 				// instead of custom dump code
 				if ($misc->isDumpEnabled()
-						&& ($_REQUEST['d_format'] == 'copy' || $_REQUEST['d_format'] == 'sql')) {
+						&& ($_REQUEST['d_format'] == 'copy' || $_REQUEST['d_format'] == 'copy_csv' || $_REQUEST['d_format'] == 'sql')) {
 					include('./dbexport.php');
 					exit;
 				}
@@ -112,11 +112,13 @@
 			$data->conn->setFetchMode(ADODB_FETCH_NUM);
 
 			// Execute the query, if set, otherwise grab all rows from the table
-			if (isset($_REQUEST['table']))
+			if (isset($_REQUEST['table'])) {
 				$rs = $data->dumpRelation($_REQUEST['table'], $oids);
-			else
+			} else if (isset($_REQUEST['view'])){
+				$rs = $data->dumpRelation($_REQUEST['view'], $oids);
+			} else if (isset($_REQUEST['query'])){
 				$rs = $data->conn->Execute($_REQUEST['query']);
-
+      }
 		    if ($format == 'copy') {
 			$data->fieldClean($_REQUEST['table']);
 			echo "COPY \"{$_REQUEST['table']}\"";

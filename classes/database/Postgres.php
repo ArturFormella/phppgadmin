@@ -4737,6 +4737,96 @@ class Postgres extends ADODB_base {
 	}
 
 	/**
+	 * Returns a list of all publications in the database
+	 * @return All casts
+	 */
+	function getPublications($name) {
+		global $conf;
+
+    if($name){
+      $this->clean($name);
+      $where = "WHERE pubname = '{$name}'";
+    } else {
+      $where = "";
+    }
+		$sql = "SELECT pubname, pg_catalog.pg_get_userbyid(pubowner) AS owner, puballtables, pubinsert, pubupdate, 
+    --pubtruncate,
+    pubdelete
+    FROM pg_catalog.pg_publication ". $where .";";
+
+		return $this->selectSet($sql);
+	}
+
+	/**
+	 * Returns publication details
+	 * @return All casts
+	 */
+	function getPublicationDetails($name) {
+		global $conf;
+
+    if($name){
+      $this->clean($name);
+      $where = "WHERE pubname = '{$name}'";
+    } else {
+      $where = "";
+    }
+		$sql = "SELECT
+      r.oid,
+      p.pubname,
+      n.nspname,
+      c.relname,
+
+      t.spcname,
+
+      c.reltuples,
+      c.relkind,
+
+      pubowner,
+      puballtables,
+      pubinsert,
+      pubupdate,
+      pubdelete,
+      pg_catalog.pg_get_userbyid(c.relowner) AS owner,
+   --   pubtruncate,
+
+      c.relnamespace,
+      c.reltype,
+      c.reltablespace,
+      n.nspowner,
+      t.spcowner	
+
+    FROM
+      pg_catalog.pg_publication_rel r
+      join pg_catalog.pg_publication p on (r.prpubid = p.oid)
+      join pg_catalog.pg_class c on (c.oid = prrelid)
+      left join pg_catalog.pg_namespace n on (c.relnamespace = n.oid)
+      left join pg_catalog.pg_tablespace t on (c.reltablespace = t.oid)
+    ". $where .";";
+		return $this->selectSet($sql);
+	}
+
+	/**
+	 * Returns a list of all subscriptions in the database
+	 * @return All casts
+	 */
+	function getSubscriptions($name) {
+		global $conf;
+
+    if($name){
+      $this->clean($name);
+      $where = "WHERE subname = '{$name}'";
+    } else {
+      $where = "";
+    }
+		$sql = "SELECT 
+    subdbid, subname, subowner, subenabled, subconninfo, subslotname, subsynccommit, subpublications,
+    pg_catalog.pg_get_userbyid(subowner) AS owner
+    FROM pg_catalog.pg_subscription ". $where .";";
+
+		return $this->selectSet($sql);
+	}
+
+	/**
 	 * Returns a list of all conversions in the database
 	 * @return All conversions
 	 */

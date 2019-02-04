@@ -661,6 +661,9 @@
 	$lang['strschemaalteredbad'] = 'Schema alteration failed.';
 	$lang['strsearchpath'] = 'Schema search path';
 	$lang['strspecifyschematodrop'] = 'You must specify at least one schema to drop.';
+	$lang['logicalreplication'] = 'Logical Replication';
+	$lang['logicalsubscriptions'] = 'Subscriptions';
+	$lang['logicalpublications'] = 'Publications';
 
 	// Reports
 

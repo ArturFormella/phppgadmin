@@ -881,7 +881,7 @@
 							'title' => $lang['strlanguages'],
 							'url'   => 'languages.php',
 							'urlvars' => array('subject' => 'database'),
-							'hide'  => $hide_advanced,
+							'hide'  => (!$hide_advanced),
 							'help'  => 'pg.language',
 							'icon'  => 'Languages',
 						),
@@ -893,6 +893,23 @@
 							'help'  => 'pg.cast',
 							'icon'  => 'Casts',
 						),
+						'logicalpublications' => array (
+							'title' => $lang['logicalpublications'],
+							'url'   => 'logicalpublications.php',
+							'urlvars' => array('subject' => 'database', 'action' => 'logicpublications'),
+							'hide'  => ($hide_advanced),
+							'help'  => 'pg.cast',
+							'icon'  => 'Replication',
+						),
+						'logicalsubscriptions' => array (
+							'title' => $lang['logicalsubscriptions'],
+							'url'   => 'logicalsubscriptions.php',
+							'urlvars' => array('subject' => 'database', 'action' => 'logicsubscriptions'),
+							'hide'  => ($hide_advanced),
+							'help'  => 'pg.cast',
+							'icon'  => 'Replication',
+						),
+
 						'export' => array (
 							'title' => $lang['strexport'],
 							'url'   => 'database.php',

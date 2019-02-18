@@ -57,7 +57,7 @@
 				// Output table header
 				echo "<tr><th class=\"data\">{$lang['strcolumn']}</th><th class=\"data\">{$lang['strtype']}</th>";
 				echo "<th class=\"data\">{$lang['strformat']}</th>\n";
-				echo "<th class=\"data\">{$lang['strnull']}</th><th class=\"data\">{$lang['strvalue']}</th></tr>";
+				echo "<th class=\"data\">{$lang['strnull']}</th><th class=\"data\">{$lang['strvalue']}</th><th class=\"data\">{$lang['strcomment']}</th></tr>";
 
 				$i = 0;
 				while (!$attrs->EOF) {
@@ -115,6 +115,9 @@
 
 					echo $data->printField("values[{$attrs->fields['attname']}]", $rs->fields[$attrs->fields['attname']], $attrs->fields['type'], $extras);
 
+					echo "</td>";
+					echo "<td>";
+					echo $attrs->fields['comment'];
 					echo "</td>";
 					$elements++;
 					echo "</tr>\n";

@@ -374,7 +374,7 @@
 				// Output table header
 				echo "<tr><th class=\"data\">{$lang['strshow']}</th><th class=\"data\">{$lang['strcolumn']}</th>";
 				echo "<th class=\"data\">{$lang['strtype']}</th><th class=\"data\">{$lang['stroperator']}</th>";
-				echo "<th class=\"data\">{$lang['strvalue']}</th></tr>";
+				echo "<th class=\"data\">{$lang['strvalue']}</th><th class=\"data\">{$lang['strcomment']}</th></tr>";
 
 				$i = 0;
 				while (!$attrs->EOF) {
@@ -401,6 +401,9 @@
 					echo "</select>\n</td>\n";
 					echo "<td style=\"white-space:nowrap;\">", $data->printField("values[{$attrs->fields['attname']}]",
 						$_REQUEST['values'][$attrs->fields['attname']], $attrs->fields['type']), "</td>";
+					echo "<td>";
+					echo $attrs->fields['comment'];
+					echo "</td>";
 					echo "</tr>\n";
 					$i++;
 					$attrs->moveNext();
@@ -478,7 +481,7 @@
 				// Output table header
 				echo "<tr><th class=\"data\">{$lang['strcolumn']}</th><th class=\"data\">{$lang['strtype']}</th>";
 				echo "<th class=\"data\">{$lang['strformat']}</th>";
-				echo "<th class=\"data\">{$lang['strnull']}</th><th class=\"data\">{$lang['strvalue']}</th></tr>";
+				echo "<th class=\"data\">{$lang['strnull']}</th><th class=\"data\">{$lang['strvalue']}</th><th class=\"data\">{$lang['strcomment']}</th></tr>";
 
 				$i = 0;
 				$fields = array();
@@ -527,6 +530,9 @@
 						echo $data->printField("values[{$attrs->fields['attnum']}]", $_REQUEST['values'][$attrs->fields['attnum']], $attrs->fields['type']);
 					}
 					echo "</td>\n";
+					echo "<td>";
+					echo $attrs->fields['comment'];
+					echo "</td>";
 					echo "</tr>\n";
 					$i++;
 					$attrs->moveNext();

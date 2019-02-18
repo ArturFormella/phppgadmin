@@ -52,5 +52,37 @@ class Postgres96 extends Postgres10 {
 		return $this->selectSet( $sql );
 	}
 
+	/**
+	 * Return all tables in current database (and schema)
+	 * @param $all True to fetch all tables, false for just in current schema
+	 * @return All tables, sorted alphabetically
+	 */
+	function getTables($all = false) {
+		$c_schema = $this->_schema;
+		$this->clean($c_schema);
+		if ($all) {
+			// Exclude pg_catalog and information_schema tables
+			$sql = "SELECT schemaname AS nspname, tablename AS relname, tableowner AS relowner, hasindexes, hasrules, hastriggers, rowsecurity
+					FROM pg_catalog.pg_tables
+					WHERE schemaname NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
+					AND has_table_privilege( '\"' || schemaname || '\".\"'|| tablename||'\"', 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') 
+					ORDER BY schemaname, tablename";
+		} else {
+			// r = ordinary table, i = index, S = sequence, v = view, m = materialized view, c = composite type, t = TOAST table, f = foreign table
+			$sql = "SELECT c.relname, pg_catalog.pg_get_userbyid(c.relowner) AS relowner,
+						pg_catalog.obj_description(c.oid, 'pg_class') AS relcomment,
+						reltuples::bigint,
+						(SELECT spcname FROM pg_catalog.pg_tablespace pt WHERE pt.oid=c.reltablespace) AS tablespace
+					FROM pg_catalog.pg_class c
+					LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+					WHERE (c.relkind = 'r' OR c.relkind = 'm' OR c.relkind = 't' OR c.relkind = 'f' OR c.relkind = 'p')
+					AND has_table_privilege( c.oid, 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') 
+					AND nspname='{$c_schema}'
+					ORDER BY c.relname";
+		}
+
+		return $this->selectSet($sql);
+	}
+
 }
 ?>

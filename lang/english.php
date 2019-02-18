@@ -167,7 +167,7 @@
 	$lang['strnodatabaseselected'] = 'Please, select a database.';
 
 	// Database sizes
-	$lang['strnoaccess'] = 'No Access'; 
+	$lang['strnoaccess'] = 'No Access';
 	$lang['strsize'] = 'Size';
 	$lang['strbytes'] = 'bytes';
 	$lang['strkb'] = 'kB';
@@ -664,6 +664,18 @@
 	$lang['logicalreplication'] = 'Logical Replication';
 	$lang['logicalsubscriptions'] = 'Subscriptions';
 	$lang['logicalpublications'] = 'Publications';
+
+	// Logica replication
+
+	$lang['has_publications'] = 'Has publications';
+	$lang['relhastriggers'] = 'Has triggers';
+	$lang['relhaspkey'] = 'Primary Key';
+	$lang['relreplident'] = 'Identity';
+	$lang['relreplident_d'] = 'DEFAULT';
+	$lang['relreplident_i'] = 'USING INDEX';
+	$lang['relreplident_n'] = 'NOTHING';
+	$lang['relreplident_f'] = 'FULL';
+	$lang['size'] = 'Size';
 
 	// Reports
 

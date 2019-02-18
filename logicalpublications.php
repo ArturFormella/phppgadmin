@@ -5,7 +5,6 @@
 	$action = (isset($_REQUEST['action'])) ? $_REQUEST['action'] : '';
 	if (!isset($msg)) $msg = '';
 
-  
 
 	/**
 	 * Show the tablelist of an pub;ication
@@ -20,46 +19,43 @@
 //		$misc->printTitle($lang['strtablelist'],'pg.aggregate');
 		$misc->printMsg($msg);
 
-    $publication = $data->getPublicationDetails($_REQUEST['publication']);
+		$publication = $data->getPublicationDetails($_REQUEST['publication']);
 
-  //  echo "<pre>";
-  //  var_dump($publication);
-    
 		if($publication->recordCount() > 0 ) {
 
-      $columns = array(
-        'oid' => array(
-          'title' => $lang['stroids'],
-          'field' => field('oid'),
-        ),
-        'nspname' => array(
-          'title' => $lang['strschemaname'],
-          'field' => field('nspname'),
-        ),
-        'relname' => array(
-          'title' => $lang['strtablename'],
-          'field' => field('relname'),
-        ),
-        'reltuples' => array(
-          'title' => $lang['strestimatedrowcount'],
-          'field' => field('reltuples'),
-        ),
-        'relkind' => array(
-          'title' => $lang['strtargettype'],
-          'field' => field('relkind'),
-        ),
-        'owner' => array(
-          'title' => $lang['strowner'],
-          'field' => field('owner'),
-        ),
-      );
-
-      $actions = array();
-
-      $misc->printTable($publication, $columns, $actions, 'logicalpublications-logicalpublications', $lang['strnocasts']);
-  
-      
-      /*
+			$columns = array(
+				'oid' => array(
+					'title' => $lang['stroids'],
+					'field' => field('oid'),
+				),
+				'nspname' => array(
+					'title' => $lang['strschemaname'],
+					'field' => field('nspname'),
+				),
+				'relname' => array(
+					'title' => $lang['strtablename'],
+					'field' => field('relname'),
+				),
+				'reltuples' => array(
+					'title' => $lang['strestimatedrowcount'],
+					'field' => field('reltuples'),
+				),
+				'relkind' => array(
+					'title' => $lang['strtargettype'],
+					'field' => field('relkind'),
+				),
+				'relreplident' => array(
+					'title' => $lang['relreplident'],
+					'field' => field('relreplident'),
+				),
+				'owner' => array(
+					'title' => $lang['strowner'],
+					'field' => field('owner'),
+				),
+			);
+			$actions = array();
+			$misc->printTable($publication, $columns, $actions, 'logicalpublications-logicalpublications', $lang['strnocasts']);
+			/*
 			echo "<table>\n";
 			echo "<tr>\n\t<th class=\"data left\">{$lang['strname']}</th>\n";
 			echo "\t<td class=\"data1\">", htmlspecialchars($_REQUEST['aggrname']), "</td>\n</tr>\n";
@@ -135,7 +131,7 @@
 		$misc->printNavLinks($navlinks, 'logicalpublications-tablelist', get_defined_vars());
 	}
 
-  
+
 	/**
 	 * Show default list of casts in the database
 	 */
@@ -153,8 +149,8 @@
 			'pubname' => array(
 				'title' => $lang['strsourcetype'],
 				'field' => field('pubname'),
-        'url'   => "logicalpublications.php?subject=logicalpublications&amp;action=tablelist&amp;{$misc->href}&amp;",
-        'vars'  => array('publication' => 'pubname'), 
+				'url'   => "logicalpublications.php?subject=logicalpublications&amp;action=tablelist&amp;{$misc->href}&amp;",
+				'vars'  => array('publication' => 'pubname'),
 			),
 			'owner' => array(
 				'title' => $lang['strtargettype'],
@@ -163,22 +159,22 @@
 			'puballtables' => array(
 				'title' => 'puballtables',
 				'field' => field('puballtables'),
-        'params'=> array('align' => 'center'),
+				'params'=> array('align' => 'center'),
 			),
 			'pubinsert' => array(
 				'title' => 'pubinsert',
 				'field' => field('pubinsert'),
-        'params'=> array('align' => 'center'),
+				'params'=> array('align' => 'center'),
 			),
 			'pubupdate' => array(
 				'title' => 'pubupdate',
 				'field' => field('pubupdate'),
-        'params'=> array('align' => 'center'),
+				'params'=> array('align' => 'center'),
 			),
 			'pubdelete' => array(
 				'title' => 'pubdelete',
 				'field' => field('pubdelete'),
-        'params'=> array('align' => 'center'),
+				'params'=> array('align' => 'center'),
 			),
 			'pubtruncate' => array(
 				'title' => 'pubtruncate',
@@ -205,12 +201,12 @@
 			'action' => url('redirect.php',
 							$reqvars,
 							array(
-                'action' => 'tablelist',
+								'action' => 'tablelist',
 								'subject' => 'database',
 								'publication'  => field('pubname')
 							)
 						),
-            /*
+				/*
 			'branch' => url('logicalpublications.php',
 							$reqvars,
 							array(
@@ -223,14 +219,14 @@
 		$misc->printTree($casts, $attrs, 'logicalpublications');
 		exit;
 	}
-  
+
 	function doSubTree() {
 		global $misc, $data, $lang;
 
 		$tabs = $misc->getNavTabs('logicalpublications');
 
-    $casts = $data->getPublications(null);
-    
+		$casts = $data->getPublications(null);
+
 		$items = $misc->adjustTabsForTree($tabs);
 
 		$reqvars = $misc->getRequestVars('publication');

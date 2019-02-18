@@ -1102,7 +1102,16 @@ class Postgres extends ADODB_base {
 			// r = ordinary table, i = index, S = sequence, v = view, m = materialized view, c = composite type, t = TOAST table, f = foreign table
 			$sql = "SELECT c.relname, pg_catalog.pg_get_userbyid(c.relowner) AS relowner,
 						pg_catalog.obj_description(c.oid, 'pg_class') AS relcomment,
-						reltuples::bigint,
+						c.relhasindex,
+						c.relhasrules,
+						c.relhastriggers,
+						c.relrowsecurity,
+						c.relreplident,
+						c.relhaspkey,
+						c.reltuples::bigint,
+						pg_size_pretty(pg_total_relation_size(c.oid)) AS size,
+						EXISTS (SELECT 1 /* array_agg(pubname)*/  FROM pg_catalog.pg_publication_rel pr, pg_catalog.pg_publication pp WHERE pr.prrelid = c.oid and pp.oid = pr.prpubid) as has_publications,
+						-- pg_size_pretty(pg_total_relation_size(c.oid) - pg_relation_size(c.oid)) as external_size,
 						(SELECT spcname FROM pg_catalog.pg_tablespace pt WHERE pt.oid=c.reltablespace) AS tablespace
 					FROM pg_catalog.pg_class c
 					LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
@@ -4780,6 +4789,7 @@ class Postgres extends ADODB_base {
 
       c.reltuples,
       c.relkind,
+      c.relreplident,
 
       pubowner,
       puballtables,

@@ -251,7 +251,7 @@
 			if (!isset($_REQUEST['tablespace'])) $_REQUEST['tablespace'] = '';
 
 			$misc->printTrail('schema');
-		    $misc->printTitle($lang['strcreatetable'], 'pg.table.create');
+			$misc->printTitle($lang['strcreatetable'], 'pg.table.create');
 			$misc->printMsg($msg);
 
 			$tbltmp = $data->getTables(true);
@@ -748,10 +748,6 @@
 				'title' => $lang['strowner'],
 				'field' => field('relowner'),
 			),
-			'tablespace' => array(
-				'title' => $lang['strtablespace'],
-				'field' => field('tablespace')
-			),
 			'tuples' => array(
 				'title' => $lang['strestimatedrowcount'],
 				'field' => field('reltuples'),
@@ -763,6 +759,30 @@
 			'comment' => array(
 				'title' => $lang['strcomment'],
 				'field' => field('relcomment'),
+			),
+			'tablespace' => array(
+				'title' => $lang['strtablespace'],
+				'field' => field('tablespace')
+			),
+			'relreplident' => array(
+				'title' => $lang['relreplident'],
+				'field' => field('relreplident')
+			),
+			'relhaspkey' => array(
+				'title' => $lang['relhaspkey'],
+				'field' => field('relhaspkey')
+			),
+			'relhastriggers' => array(
+				'title' => $lang['relhastriggers'],
+				'field' => field('relhastriggers')
+			),
+			'has_publications' => array(
+				'title' => $lang['has_publications'],
+				'field' => field('has_publications')
+			),
+			'size' => array(
+				'title' => $lang['size'],
+				'field' => field('size')
 			),
 		);
 

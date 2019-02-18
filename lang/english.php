@@ -56,6 +56,7 @@
 	$lang['strcreate'] = 'Create';
 	$lang['strcreated'] = 'Created';
 	$lang['strcomment'] = 'Comment';
+	$lang['strusing'] = 'Alter USING';
 	$lang['strlength'] = 'Length';
 	$lang['strdefault'] = 'Default';
 	$lang['stralter'] = 'Alter';

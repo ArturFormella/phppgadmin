@@ -2141,7 +2141,7 @@ class Postgres extends ADODB_base {
 	 * @return -6 transaction error
 	 */
 	function alterColumn($table, $column, $name, $notnull, $oldnotnull, $default, $olddefault,
-		$type, $length, $array, $oldtype, $comment)
+		$type, $length, $array, $oldtype, $comment, $usingClause = null)
 	{
 		// Begin transaction
 		$status = $this->beginTransaction();
@@ -2206,8 +2206,14 @@ class Postgres extends ADODB_base {
 		// Add array qualifier, if requested
 		if ($array) $ftype .= '[]';
 
+		if ($usingClause) {
+			$usingQuery = " USING ". $usingClause;
+		} else {
+			$usingQuery = "";
+		}
+
 		if ($ftype != $oldtype) {
-			$toAlter[] = "ALTER COLUMN \"{$name}\" TYPE {$ftype}";
+			$toAlter[] = "ALTER COLUMN \"{$name}\" TYPE {$ftype}{$usingQuery}";
 		}
 
 		// Attempt to process the batch alteration, if anything has been changed

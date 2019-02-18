@@ -45,7 +45,7 @@
 				else {
 					echo "<th class=\"data required\">{$lang['strtype']}</th>\n";
 				}
-				echo "<th class=\"data\">{$lang['strnotnull']}</th>\n<th class=\"data\">{$lang['strdefault']}</th>\n<th class=\"data\">{$lang['strcomment']}</th></tr>\n";
+				echo "<th class=\"data\">{$lang['strnotnull']}</th>\n<th class=\"data\">{$lang['strdefault']}</th>\n<th class=\"data\">{$lang['strusing']}</th><th class=\"data\">{$lang['strcomment']}</th></tr>\n";
 
 				$column = $data->getTableAttributes($_REQUEST['table'], $_REQUEST['column']);
 				$column->fields['attnotnull'] = $data->phpBool($column->fields['attnotnull']);
@@ -75,6 +75,7 @@
 					$_REQUEST['default'] = $_REQUEST['olddefault'] = $column->fields['adsrc'];
 					if ($column->fields['attnotnull']) $_REQUEST['notnull'] = 'YES';
 					$_REQUEST['comment'] = $column->fields['comment'];
+					$_REQUEST['using'] = '';
 				}				
 
 				// Column name
@@ -118,6 +119,8 @@
 				echo "<td><input type=\"checkbox\" name=\"notnull\"", (isset($_REQUEST['notnull'])) ? ' checked="checked"' : '', " /></td>\n";
 				echo "<td><input name=\"default\" size=\"20\" value=\"", 
 					htmlspecialchars($_REQUEST['default']), "\" /></td>\n";
+			echo "<td><input name=\"using\" size=\"20\" value=\"",
+					htmlspecialchars($_REQUEST['using']), "\" /></td>\n";
 				echo "<td><input name=\"comment\" size=\"40\" value=\"", 
 					htmlspecialchars($_REQUEST['comment']), "\" /></td></tr>\n";
 				echo "</table>\n";
@@ -152,7 +155,7 @@
 							     isset($_REQUEST['notnull']), isset($_REQUEST['oldnotnull']), 
 							     $_REQUEST['default'], $_REQUEST['olddefault'],
 							     $_REQUEST['type'], $_REQUEST['length'], $_REQUEST['array'], $_REQUEST['oldtype'],
-							     $_REQUEST['comment']);
+							     $_REQUEST['comment'], $_REQUEST['using']);
 				if ($status == 0) {
 					if ($_REQUEST['column'] != $_REQUEST['field']) {
 						$_REQUEST['column'] = $_REQUEST['field'];

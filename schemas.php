@@ -44,6 +44,10 @@
 				'title' => $lang['strcomment'],
 				'field' => field('nspcomment'),
 			),
+			'size' => array(
+				'title' => $lang['size'],
+				'field' => field('size'),
+			),
 		);
 
 		$actions = array(

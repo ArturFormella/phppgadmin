@@ -842,12 +842,19 @@ class Postgres extends ADODB_base {
 
 		if (!$conf['show_system']) {
 			$where = "WHERE nspname NOT LIKE 'pg@_%' ESCAPE '@' AND nspname != 'information_schema'";
-
 		}
 		else $where = "WHERE nspname !~ '^pg(_temp_[0-9]+|_toast)+$'";
 		$sql = "
 			SELECT pn.nspname, pu.rolname AS nspowner,
-				pg_catalog.obj_description(pn.oid, 'pg_namespace') AS nspcomment
+				pg_catalog.obj_description(pn.oid, 'pg_namespace') AS nspcomment,
+
+				(SELECT
+					pg_size_pretty(sum(pg_total_relation_size(
+							 quote_ident(schemaname) || '.' || quote_ident(tablename)
+					 ))::bigint)
+				FROM pg_tables
+				WHERE schemaname = pn.nspname	) as size
+
 			FROM pg_catalog.pg_namespace pn
 				LEFT JOIN pg_catalog.pg_roles pu ON (pn.nspowner = pu.oid)
 			{$where}
@@ -1109,8 +1116,8 @@ class Postgres extends ADODB_base {
 						c.relreplident,
 						c.relhaspkey,
 						c.reltuples::bigint,
-						pg_size_pretty(pg_total_relation_size(c.oid)) AS size,
 						EXISTS (SELECT 1 /* array_agg(pubname)*/  FROM pg_catalog.pg_publication_rel pr, pg_catalog.pg_publication pp WHERE pr.prrelid = c.oid and pp.oid = pr.prpubid) as has_publications,
+						pg_size_pretty(pg_total_relation_size(c.oid)) AS size,
 						-- pg_size_pretty(pg_total_relation_size(c.oid) - pg_relation_size(c.oid)) as external_size,
 						(SELECT spcname FROM pg_catalog.pg_tablespace pt WHERE pt.oid=c.reltablespace) AS tablespace
 					FROM pg_catalog.pg_class c

@@ -120,7 +120,7 @@
 					$i++;
 				}
 				$status = $data->insertRow($_REQUEST['table'], $fields, $vars, $nulls, $format, $types);
-				if ($status != 0) {
+				if ($status['result'] != 0) {
 					$data->rollbackTransaction();
 					$misc->printMsg($lang['strimporterror']);
 					exit;
@@ -247,7 +247,7 @@
 						}
 
 						$status = $data->insertRow($_REQUEST['table'], $t_fields, $vars, $nulls, $format, $types);
-						if ($status != 0) {
+						if ($status['result'] != 0) {
 							$data->rollbackTransaction();
 							$misc->printMsg(sprintf($lang['strimporterrorline'], $row));
 							exit;

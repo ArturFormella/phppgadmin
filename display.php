@@ -169,12 +169,13 @@
 		else {
 			if (!isset($_POST['values'])) $_POST['values'] = array();
 			if (!isset($_POST['nulls'])) $_POST['nulls'] = array();
-			
+
 			$status = $data->editRow($_POST['table'], $_POST['values'], $_POST['nulls'], 
 				$_POST['format'], $_POST['types'], $key);
-			if ($status == 0)
-				doBrowse($lang['strrowupdated']);
-			elseif ($status == -2)
+
+			if ($status['result'] == 0)
+				doBrowse($lang['strrowupdated'], $status['sql'] );
+			elseif ($status['result'] == -2)
 				doEditRow(true, $lang['strrownotunique']);
 			else
 				doEditRow(true, $lang['strrowupdatedbad']);
@@ -242,12 +243,12 @@
 		}
 		else {
 			$status = $data->deleteRow($_POST['table'], unserialize(urldecode($_POST['key'])));
-			if ($status == 0)
-				doBrowse($lang['strrowdeleted']);
-			elseif ($status == -2)
-				doBrowse($lang['strrownotunique']);
+			if ($status['result'] == 0)
+				doBrowse($lang['strrowdeleted'], $status['sql']);
+			elseif ($status['result'] == -2)
+				doBrowse($lang['strrownotunique'], $status['sql']);
 			else			
-				doBrowse($lang['strrowdeletedbad']);
+				doBrowse($lang['strrowdeletedbad'], $status['sql']);
 		}
 		
 	}
@@ -428,7 +429,7 @@
 	/** 
 	 * Displays requested data
 	 */
-	function doBrowse($msg = '') {
+	function doBrowse($msg = '', $sql = null) {
 		global $data, $conf, $misc, $lang, $plugin_manager;
 
 		$save_history = false;
@@ -472,6 +473,9 @@
 			$misc->printTitle($lang['strqueryresults']);
 			/*we comes from sql.php, $_SESSION['sqlquery'] has been set there */
 			$type = 'QUERY';
+		}
+		if ($sql) {
+			$misc->printMsg('<div style="padding: 15px;background-color: #EEEEEE;"><code style="color:black;margin-bottom: 10px;white-space: pre-wrap;word-break: keep-all;line-height:15px">'. $sql .'</code></div>');
 		}
 
 		$misc->printMsg($msg);

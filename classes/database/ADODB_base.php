@@ -165,18 +165,30 @@ class ADODB_base {
 		    if ($sql) $sql .= " AND \"{$key}\"='{$value}'";
 		else $sql = "DELETE FROM {$schema}\"{$table}\" WHERE \"{$key}\"='{$value}'";
 	    }
+		$sql .= ';';
 
 		// Check for failures
 		if (!$this->conn->Execute($sql)) {
 			// Check for referential integrity failure
 			if (stristr($this->conn->ErrorMsg(), 'referential'))
-				return -1;
+				return array(
+					"sql" => $sql,
+					"result" => -1
+				);
 		}
 
 		// Check for no rows modified
-		if ($this->conn->Affected_Rows() == 0) return -2;
+		if ($this->conn->Affected_Rows() == 0) {
+			return array(
+				"sql" => $sql,
+				"result" => -2
+			);
+		};
 
-		return $this->conn->ErrorNo();
+		return array(
+			"sql" => $sql,
+			"result" => $this->conn->ErrorNo()
+		);
 	}
 
 	/**

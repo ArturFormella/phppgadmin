@@ -263,8 +263,9 @@ class Postgres83 extends Postgres84 {
 			WHERE 
 				c.relname = '{$table}' AND n.nspname = '{$c_schema}'
 		");
-		
-		return $this->deleteRow('pg_autovacuum', array('vacrelid' => $rs->fields['oid']), 'pg_catalog');
+
+		$status = $this->deleteRow('pg_autovacuum', array('vacrelid' => $rs->fields['oid']), 'pg_catalog');
+		return $status['result'];
 	}
 	
 	// Sequence functions

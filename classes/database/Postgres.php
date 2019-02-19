@@ -1114,7 +1114,7 @@ class Postgres extends ADODB_base {
 						c.relhastriggers,
 						c.relrowsecurity,
 						c.relreplident,
-						c.relhaspkey,
+						EXISTS (SELECT 1 from pg_index WHERE indrelid = c.oid AND indisprimary) as relhaspkey,
 						c.reltuples::bigint,
 						EXISTS (SELECT 1 /* array_agg(pubname)*/  FROM pg_catalog.pg_publication_rel pr, pg_catalog.pg_publication pp WHERE pr.prrelid = c.oid and pp.oid = pr.prpubid) as has_publications,
 						pg_size_pretty(pg_total_relation_size(c.oid)) AS size,
@@ -2526,7 +2526,10 @@ class Postgres extends ADODB_base {
 			|| !is_array($format) || !is_array($types)
 			|| (count($fields) != count($values))
 		) {
-			return -1;
+			return array(
+				"sql" => NULL,
+				"result" => -1
+			);
 		}
 		else {
 			// Build clause
@@ -2547,14 +2550,19 @@ class Postgres extends ADODB_base {
 						$sql .= ',' . $this->formatValue($types[$i], $format[$i], $value);
 				}
 
-				$sql = "INSERT INTO \"{$f_schema}\".\"{$table}\" (\"". implode('","', $fields) ."\")
-					VALUES (". substr($sql, 1) .")";
+				$sql = "INSERT INTO \"{$f_schema}\".\"{$table}\" (\"". implode('","', $fields) ."\") VALUES (". substr($sql, 1) .");";
 
-				return $this->execute($sql);
+				return array(
+					"sql" => $sql,
+					"result" => $this->execute($sql)
+				);
 			}
 		}
 
-		return -1;
+		return array(
+			"sql" => NULL,
+			"result" => -1
+		);
 	}
 
 	/**
@@ -2570,7 +2578,9 @@ class Postgres extends ADODB_base {
 	 */
 	function editRow($table, $vars, $nulls, $format, $types, $keyarr) {
 		if (!is_array($vars) || !is_array($nulls) || !is_array($format) || !is_array($types))
-			return -1;
+			return array(
+				"result" => -1
+			);
 		else {
 			$f_schema = $this->_schema;
 			$this->fieldClean($f_schema);
@@ -2600,26 +2610,39 @@ class Postgres extends ADODB_base {
 					else $sql .= " AND \"{$k}\"='{$v}'";
 				}
 		}
+		$sql .= ";";
 
 			// Begin transaction.  We do this so that we can ensure only one row is
 			// edited
 			$status = $this->beginTransaction();
 		if ($status != 0) {
 			$this->rollbackTransaction();
-				return -1;
+			return array(
+				"sql" => $sql,
+				"result" => -1
+			);
 		}
 
 	   	$status = $this->execute($sql);
 			if ($status != 0) { // update failed
-			$this->rollbackTransaction();
-				return -1;
+				$this->rollbackTransaction();
+				return array(
+					"sql" => $sql,
+					"result" => -1
+				);
 			} elseif ($this->conn->Affected_Rows() != 1) { // more than one row could be updated
 				$this->rollbackTransaction();
-				return -2;
+				return array(
+					"sql" => $sql,
+					"result" => -2
+				);
 		}
 
 			// End transaction
-		return $this->endTransaction();
+		return array(
+			"sql" => $sql,
+			"result" => $this->endTransaction()
+		);
 	}
 	}
 
@@ -2637,19 +2660,27 @@ class Postgres extends ADODB_base {
 			$status = $this->beginTransaction();
 			if ($status != 0) {
 				$this->rollbackTransaction();
-				return -1;
+				return array(
+					"sql" => $sql,
+					"result" => -1
+				);
 			}
 
 			if ($schema === false) $schema = $this->_schema;
 
 			$status = $this->delete($table, $key, $schema);
-			if ($status != 0 || $this->conn->Affected_Rows() != 1) {
+			if ($status['result'] != 0 || $this->conn->Affected_Rows() != 1) {
 				$this->rollbackTransaction();
-				return -2;
+				return array(
+					"sql" => $status['sql'],
+					"result" => -2
+				);
 			}
-
 			// End transaction
-			return $this->endTransaction();
+			return array(
+				"sql" => $status['sql'],
+				"result" => $this->endTransaction()
+			);
 		}
 	}
 

@@ -454,7 +454,7 @@
 	/**
 	 * Ask for insert parameters and then actually insert row
 	 */
-	function doInsertRow($confirm, $msg = '') {
+	function doInsertRow($confirm, $msg = '', $sql = NULL) {
 		global $data, $misc, $conf;
 		global $lang;
 
@@ -462,7 +462,10 @@
 			$misc->printTrail('table');
 			$misc->printTabs('table','insert');
 // 			$misc->printTitle($lang['strinsertrow'], 'pg.sql.insert');
-			
+
+			if ($sql) {
+				$misc->printMsg('<div style="padding: 15px;background-color: #EEEEEE;"><code style="color:black;margin-bottom: 10px;white-space: pre-wrap;word-break: keep-all;line-height:15px">'. $sql .'</code></div>');
+			}
 			$misc->printMsg($msg);
 
 			$attrs = $data->getTableAttributes($_REQUEST['table']);
@@ -572,19 +575,20 @@
 			if ($_SESSION['counter']++ == $_POST['protection_counter']) {
 				$status = $data->insertRow($_POST['table'], $_POST['fields'], $_POST['values'],
 											$_POST['nulls'], $_POST['format'], $_POST['types']);
-				if ($status == 0) {
+
+				if ($status['result'] == 0) {
 					if (isset($_POST['insert']))
-						doDefault($lang['strrowinserted']);
+						doDefault($lang['strrowinserted'], $status['sql']);
 					else {
-						$_REQUEST['values'] = array();
-						$_REQUEST['nulls'] = array();
-						doInsertRow(true, $lang['strrowinserted']);
+				//		$_REQUEST['values'] = array();
+				//		$_REQUEST['nulls'] = array();
+						doInsertRow(true, $lang['strrowinserted'], $status['sql']);
 					}
 				}
 				else
-					doInsertRow(true, $lang['strrowinsertedbad']);
+					doInsertRow(true, $lang['strrowinsertedbad'], $status['sql']);
 			} else
-				doInsertRow(true, $lang['strrowduplicate']);
+				doInsertRow(true, $lang['strrowduplicate'], NULL);
 		}
 
 	}
@@ -733,12 +737,15 @@
 	/**
 	 * Show default list of tables in the database
 	 */
-	function doDefault($msg = '') {
+	function doDefault($msg = '', $sql = NULL) {
 		global $data, $conf, $misc, $data;
 		global $lang;
 
 		$misc->printTrail('schema');
 		$misc->printTabs('schema','tables');
+		if ($sql) {
+			$misc->printMsg('<div style="padding: 15px;background-color: #EEEEEE;"><code style="color:black;margin-bottom: 10px;white-space: pre-wrap;word-break: keep-all;line-height:15px">'. $sql .'</code></div>');
+		}
 		$misc->printMsg($msg);
 
 		$tables = $data->getTables();

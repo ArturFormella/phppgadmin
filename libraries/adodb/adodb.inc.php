@@ -1024,6 +1024,10 @@
 
 	function _Execute($sql,$inputarr=false)
 	{
+		$sessionId = session_id();
+		session_commit();
+		session_write_close();
+
 		if ($this->debug) {
 			global $ADODB_INCLUDED_LIB;
 			if (empty($ADODB_INCLUDED_LIB)) include(ADODB_DIR.'/adodb-lib.inc.php');
@@ -1031,6 +1035,12 @@
 		} else {
 			$this->_queryID = @$this->_query($sql,$inputarr);
 		}
+
+		session_name($sessionId);
+		session_start([
+			'use_cookies' => '0', 
+			'cache_limiter' => ''
+		]);
 
 		/************************
 		// OK, query executed
@@ -4220,6 +4230,7 @@ http://www.stanford.edu/dept/itss/docs/oracle/10g/server.101/b10759/statements_1
 	 *  username: User name for login
 	 *  password: Password for login
 	 */
+
 		if (!empty($ADODB_NEWCONNECTION)) {
 			$obj = $ADODB_NEWCONNECTION($db);
 

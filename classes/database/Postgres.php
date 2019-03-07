@@ -159,7 +159,7 @@ class Postgres extends ADODB_base {
 	// Default index type
 	var $typIndexDef = 'BTREE';
 	// Array of allowed index types
-	var $typIndexes = array('BTREE', 'RTREE', 'GIST', 'GIN', 'HASH');
+	var $typIndexes = array('BTREE', 'RTREE', 'BRIN', 'GIST', 'GIN', 'HASH');
 	// Array of allowed type storage attributes
 	var $typStorages = array('plain', 'external', 'extended', 'main');
 	// The default type storage

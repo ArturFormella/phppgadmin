@@ -448,7 +448,7 @@
 			$data->fieldClean($table);
 
 			$actions['browse']['attr']['href']['urlvars']['query'] = "SELECT \"{$attname}\", count(*) AS \"count\"
-				FROM \"{$table}\" GROUP BY \"{$attname}\" ORDER BY \"{$attname}\"";
+				FROM \"{$table}\" GROUP BY \"{$attname}\" count(*) DESC";
 
 			return $actions;
 		}

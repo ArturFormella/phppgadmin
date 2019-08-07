@@ -381,9 +381,18 @@
 		global $data, $misc;
 		global $lang;
 		
-		function attPre(&$rowdata) {
+		function attPre(&$rowdata, $actions) {
 			global $data;
 			$rowdata->fields['+type'] = $data->formatType($rowdata->fields['type'], $rowdata->fields['atttypmod']);
+			$attname = $rowdata->fields['attname'];
+			$table = $_REQUEST['view'];
+			$data->fieldClean($attname);
+			$data->fieldClean($table);
+
+			$actions['browse']['attr']['href']['urlvars']['query'] = "SELECT \"{$attname}\", count(*) AS \"count\"
+				FROM \"{$table}\" GROUP BY \"{$attname}\" ORDER BY count(*) DESC";
+
+			return $actions;
 		}
 		
 		$misc->printTrail('view');
@@ -424,6 +433,20 @@
 		);
 		
 		$actions = array(
+			'browse' => array(
+				'content' => $lang['strbrowse'],
+				'attr'=> array (
+					'href' => array (
+						'url' => 'display.php',
+						'urlvars' => array (
+							'table' => $_REQUEST['view'],
+							'subject' => 'column',
+							'return' => 'table',
+							'column' => field('attname')
+						)
+					)
+				)
+			),
 			'alter' => array(
 				'content' => $lang['stralter'],
 				'attr'=> array (

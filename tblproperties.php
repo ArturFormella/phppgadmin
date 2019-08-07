@@ -414,7 +414,7 @@
 									'table'		=> $_REQUEST['table'],
 									'column'	=> field('attname'),
 									'query'		=> replace(
-														'SELECT "%column%", count(*) AS "count" FROM "%table%" GROUP BY "%column%" ORDER BY "%column%"',
+														'SELECT "%column%", count(*) AS "count" FROM "%table%" GROUP BY "%column%" ORDER BY count(*) DESC',
 														array (
 															'%column%' => field('attname'),
 															'%table%' => $_REQUEST['table']

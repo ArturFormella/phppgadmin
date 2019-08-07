@@ -239,7 +239,7 @@
 			$data->fieldClean($f_attname);
 			$data->fieldClean($f_table);
 			$data->fieldClean($f_schema);
-			$query = "SELECT \"{$f_attname}\", count(*) AS \"count\" FROM \"{$f_schema}\".\"{$f_table}\" GROUP BY \"{$f_attname}\" ORDER BY \"{$f_attname}\"";
+			$query = "SELECT \"{$f_attname}\", count(*) AS \"count\" FROM \"{$f_schema}\".\"{$f_table}\" GROUP BY \"{$f_attname}\" ORDER BY count(*) DESC";
 
 			if ($isTable) {
 

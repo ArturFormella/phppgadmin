@@ -356,7 +356,7 @@
 								'view'     => $_REQUEST['view'],
 								'column'    => field('attname'),
 								'query'     => replace(
-									'SELECT "%column%", count(*) AS "count" FROM %view% GROUP BY "%column%" ORDER BY "%column%"',
+									'SELECT "%column%", count(*) AS "count" FROM %view% GROUP BY "%column%" ORDER BY count(*) DESC',
 									array (
 										'%column%' => field('attname'),
 										'%view%' => $_REQUEST['view']

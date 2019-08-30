@@ -52,6 +52,7 @@
 	$lang['strnext'] = 'Next >';
 	$lang['strfirst'] = '<< First';
 	$lang['strlast'] = 'Last >>';
+	$lang['strlastval'] = 'Last value';
 	$lang['strfailed'] = 'Failed';
 	$lang['strcreate'] = 'Create';
 	$lang['strcreated'] = 'Created';

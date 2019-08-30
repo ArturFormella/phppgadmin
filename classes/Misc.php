@@ -598,8 +598,10 @@
 
 			if (!isset($_no_output)) {
 				if ($doBody) {
-					$bodyClass = htmlspecialchars($bodyClass);
-					echo "<body", ($bodyClass == '' ? '' : " class=\"{$bodyClass}\"");
+					$server_info = $this->getServerInfo();
+					$classes = isset($server_info['add_body_class']) ? $server_info['add_body_class']  : '';
+					$bodyClass = htmlspecialchars($bodyClass) .' '. htmlspecialchars($classes);
+					echo "<body ", ($classes == '' ? '' : " class=\"{$classes}\"");
 					echo ">\n";
 				}
 			}
@@ -1370,8 +1372,8 @@
 
 			$server_info = $this->getServerInfo();
 			$reqvars = $this->getRequestVars('table');
-
-			echo "<div class=\"topbar\"><table style=\"width: 100%\"><tr><td>";
+			$border = isset($server_info['border_color']) ? 'style="border-color:' . htmlspecialchars($server_info['border_color']) . '"' : '';
+			echo "<div class=\"topbar\" ${border}><table style=\"width: 100%\"><tr><td>";
 
 			if ($server_info && isset($server_info['platform']) && isset($server_info['username'])) {
 				/* top left informations when connected */

@@ -40,6 +40,10 @@
 			'actions' => array(
 				'title' => $lang['stractions'],
 			),
+			'lastval' => array(
+				'title' => $lang['strlastval'],
+				'field' => field('last_val'),
+			),
 			'comment' => array(
 				'title' => $lang['strcomment'],
 				'field' => field('seqcomment'),

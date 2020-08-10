@@ -46,8 +46,10 @@
 				echo "\t<tr>\n\t\t<th class=\"data left required\">{$lang['strnumcols']}</th>\n";
 				echo "\t\t<td class=\"data\"><input name=\"fields\" size=\"5\" maxlength=\"{$data->_maxNameLen}\" value=\"",
 					htmlspecialchars($_REQUEST['fields']), "\" /></td>\n\t</tr>\n";
-				echo "\t<tr>\n\t\t<th class=\"data left\">{$lang['stroptions']}</th>\n";
-				echo "\t\t<td class=\"data\"><label for=\"withoutoids\"><input type=\"checkbox\" id=\"withoutoids\" name=\"withoutoids\"", isset($_REQUEST['withoutoids']) ? ' checked="checked"' : '', " />WITHOUT OIDS</label></td>\n\t</tr>\n";
+				if ($data->hasServerOIDS()){
+					echo "\t<tr>\n\t\t<th class=\"data left\">{$lang['stroptions']}</th>\n";
+					echo "\t\t<td class=\"data\"><label for=\"withoutoids\"><input type=\"checkbox\" id=\"withoutoids\" name=\"withoutoids\"", isset($_REQUEST['withoutoids']) ? ' checked="checked"' : '', " />WITHOUT OIDS</label></td>\n\t</tr>\n";
+				}
 
 				// Tablespace (if there are any)
 				if ($data->hasTablespaces() && $tablespaces->recordCount() > 0) {
@@ -616,7 +618,7 @@
 					echo "<p>", sprintf($lang['strconfemptytable'], $misc->printVal($a['table'])), "</p>\n";
 					printf('<input type="hidden" name="table[]" value="%s" />', htmlspecialchars($a['table']));
 				}
-			} // END mutli empty
+			} // END multi empty
 			else {
 				$misc->printTrail('table');
 				$misc->printTitle($lang['strempty'],'pg.table.empty');
@@ -625,7 +627,7 @@
 
 				echo "<form action=\"tables.php\" method=\"post\">\n";
 				echo "<input type=\"hidden\" name=\"table\" value=\"", htmlspecialchars($_REQUEST['table']), "\" />\n";
-			} // END not mutli empty
+			} // END not multi empty
 
 			echo "<input type=\"hidden\" name=\"action\" value=\"empty\" />\n";
 			echo $misc->form;
@@ -645,14 +647,14 @@
 					}
 				}
 				doDefault($msg);
-			} // END mutli empty
+			} // END multi empty
 			else {
 				$status = $data->emptyTable($_POST['table']);
 				if ($status == 0)
 					doDefault($lang['strtableemptied']);
 				else
 					doDefault($lang['strtableemptiedbad']);
-			} // END not mutli empty
+			} // END not multi empty
 		} // END do Empty
 	}
 

@@ -2742,14 +2742,25 @@ class Postgres extends ADODB_base {
 				WHERE c.relowner=u.usesysid AND c.relnamespace=n.oid
 				AND c.relkind = 'S'
 				AND n.nspname NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
+				AND has_sequence_privilege( '\"' || n.nspname || '\".\"'|| c.relname ||'\"', 'SELECT')
 				ORDER BY nspname, seqname";
 		} else {
 			$c_schema = $this->_schema;
 			$this->clean($c_schema);
-			$sql = "SELECT c.relname AS seqname, u.usename AS seqowner, pg_catalog.obj_description(c.oid, 'pg_class') AS seqcomment,
+			$sql = "CREATE OR REPLACE FUNCTION pg_temp.seq_value(schema_name TEXT, seq_name TEXT)
+			RETURNS bigint AS \$$
+			declare result bigint;
+			BEGIN
+				EXECUTE 'SELECT last_value FROM ' || quote_ident(schema_name) || '.' || quote_ident(seq_name) || ' limit 1' INTO result;
+				RETURN result;
+			END\$$ LANGUAGE plpgsql VOLATILE;
+
+			SELECT c.relname AS seqname, u.usename AS seqowner, pg_catalog.obj_description(c.oid, 'pg_class') AS seqcomment,
+				pg_temp.seq_value('{$c_schema}',c.relname) as last_val,
 				(SELECT spcname FROM pg_catalog.pg_tablespace pt WHERE pt.oid=c.reltablespace) AS tablespace
 				FROM pg_catalog.pg_class c, pg_catalog.pg_user u, pg_catalog.pg_namespace n
 				WHERE c.relowner=u.usesysid AND c.relnamespace=n.oid
+				AND has_sequence_privilege( '\"' || n.nspname || '\".\"'|| c.relname ||'\"', 'SELECT')
 				AND c.relkind = 'S' AND n.nspname='{$c_schema}' ORDER BY seqname";
 		}
 

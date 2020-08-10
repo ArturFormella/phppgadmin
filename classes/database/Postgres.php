@@ -2028,7 +2028,7 @@ class Postgres extends ADODB_base {
 		$this->fieldClean($f_schema);
 		$this->fieldClean($table);
 
-		$sql = "DELETE FROM \"{$f_schema}\".\"{$table}\"";
+		$sql = "TRUNCATE \"{$f_schema}\".\"{$table}\";";
 
 		return $this->execute($sql);
 	}

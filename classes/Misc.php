@@ -1836,7 +1836,7 @@
 		function inisizeToBytes($strIniSize) {
 			// This function will take the string value of an ini 'size' parameter,
 			// and return a double (64-bit float) representing the number of bytes
-			// that the parameter represents. Or false if $strIniSize is unparseable.
+			// that the parameter represents. Or false if $strIniSize is unparsable.
 			$a_IniParts = array();
 
 			if (!is_string($strIniSize))

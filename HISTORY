@@ -4,10 +4,16 @@ phpPgAdmin History
 Version 7.12.1
 --------------
 
+Features:
+* Add support for granting USAGE on sequences
+* Update French translation 
+
 Bugs: 
+* Fix issues with OID removal in Postgres 12+
 * Remove broken tree branch from table/view browse option
 * Properly escape identifiers when browsing tables/views/schemas
 * Fix truncation of long multibyte strings 
+* Clean up a number of misspellings and typos from codespell report
 
 Incompatabilities:
 * Require mbstring module support in PHP

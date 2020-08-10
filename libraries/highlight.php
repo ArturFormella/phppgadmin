@@ -346,7 +346,7 @@ function syntax_highlight_helper($text, $language)
     "SQRT",            "STATEMENT",    "STATIC",    "STOP",            "STORAGE",
     "STREAM",        "STRING",        "STRINGRANGE",                "STRG",
     "STRUCTURE",    "SUBSCRIPTRANGE",            "SUBRG",        "SUBSTR",
-    "SUBTRACT",        "SUM",            "SUPERCEDE","SYSIN",        "SYSPRINT",
+    "SUBTRACT",        "SUM",            "SYSIN",        "SYSPRINT",
     "SYSTEM",        "SYSTEM_PROTECTION",        "TAB",            "TAN",
     "TAND",            "TANH",            "TEMPORARY","%THEN",        "THEN",
     "TIME",            "TIMEOUT_PERIOD",            "%TITLE",        "TITLE",

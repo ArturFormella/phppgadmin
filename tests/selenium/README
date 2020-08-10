@@ -31,7 +31,7 @@ in the test suite and use the previous created tables.
 These scripts are included and executed in TestSuite.php in alphanumeric order. See comments in file ./tests/selenium/src/skeleton.php-dist
 which is a template of test-builder.
 When executed from TestSuite.php, test-builders should:
-- create a "TestBuilder" intance which gonna helps write HTML tests quickly. 
+- create a "TestBuilder" instance which gonna helps write HTML tests quickly. 
 	The constructor takes the following arguments:
 	- HTML title of the page
 	- Test description (appears on top of the tests table)

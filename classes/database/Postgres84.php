@@ -17,7 +17,7 @@ class Postgres84 extends Postgres90 {
 	var $privlist = array(
   		'table' => array('SELECT', 'INSERT', 'UPDATE', 'DELETE', 'REFERENCES', 'TRIGGER', 'ALL PRIVILEGES'),
   		'view' => array('SELECT', 'INSERT', 'UPDATE', 'DELETE', 'REFERENCES', 'TRIGGER', 'ALL PRIVILEGES'),
-  		'sequence' => array('SELECT', 'UPDATE', 'ALL PRIVILEGES'),
+  		'sequence' => array('USAGE', 'SELECT', 'UPDATE', 'ALL PRIVILEGES'),
   		'database' => array('CREATE', 'TEMPORARY', 'CONNECT', 'ALL PRIVILEGES'),
   		'function' => array('EXECUTE', 'ALL PRIVILEGES'),
   		'language' => array('USAGE', 'ALL PRIVILEGES'),
@@ -98,7 +98,7 @@ class Postgres84 extends Postgres90 {
 		if (!$conf['show_system']) {
 			// XXX: The mention of information_schema here is in the wrong place, but
 			// it's the quickest fix to exclude the info schema from 7.4
-			$where = " AND pn.nspname NOT LIKE \$_PATERN_\$pg\_%\$_PATERN_\$ AND pn.nspname != 'information_schema'";
+			$where = " AND pn.nspname NOT LIKE \$_PATTERN_\$pg\_%\$_PATTERN_\$ AND pn.nspname != 'information_schema'";
 			$lan_where = "AND pl.lanispl";
 		}
 		else {
@@ -112,7 +112,7 @@ class Postgres84 extends Postgres90 {
 			$sql = "SELECT * FROM (";
 		}
 
-		$term = "\$_PATERN_\$%{$term}%\$_PATERN_\$";
+		$term = "\$_PATTERN_\$%{$term}%\$_PATTERN_\$";
 
 		$sql .= "
 			SELECT 'SCHEMA' AS type, oid, NULL AS schemaname, NULL AS relname, nspname AS name

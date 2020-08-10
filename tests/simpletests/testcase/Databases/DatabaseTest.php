@@ -84,7 +84,7 @@ class DatabaseTest extends PreconditionSet
         $this->assertWantedText($lang['strdatabasecreated']);
 
         // Release the resource. 
-		// XXX In fact, this line doesnot work because of phpPgAdmin's bug.
+		// XXX In fact, this line does not work because of phpPgAdmin's bug.
 		// "cannot delete opened database"
         $this->dropDatabase('spikesource1');
 
@@ -132,7 +132,7 @@ class DatabaseTest extends PreconditionSet
         $this->assertWantedText($lang['strdatabasecreated']);
 
         // Release the resource.
-		// XXX In fact, this line doesnot work because of phpPgAdmin's bug (?)
+		// XXX In fact, this line does not work because of phpPgAdmin's bug (?)
 		// "cannot delete opened database"
         $this->dropDatabase('spikesource2');
 

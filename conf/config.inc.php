@@ -136,6 +136,7 @@
 	$conf['theme'] = 'default';
 
 	// Show OIDs when browsing tables?
+	// Only supported in versions <=11
 	$conf['show_oids'] = false;
 
 	// Max rows to show on a page when browsing record sets

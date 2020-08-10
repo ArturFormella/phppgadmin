@@ -149,7 +149,7 @@ class Postgres10 extends Postgres11 {
 		if (!$conf['show_system']) {
 			// XXX: The mention of information_schema here is in the wrong place, but
 			// it's the quickest fix to exclude the info schema from 7.4
-			$where = " AND pn.nspname NOT LIKE \$_PATERN_\$pg\_%\$_PATERN_\$ AND pn.nspname != 'information_schema'";
+			$where = " AND pn.nspname NOT LIKE \$_PATTERN_\$pg\_%\$_PATTERN_\$ AND pn.nspname != 'information_schema'";
 			$lan_where = "AND pl.lanispl";
 		}
 		else {
@@ -163,7 +163,7 @@ class Postgres10 extends Postgres11 {
 			$sql = "SELECT * FROM (";
 		}
 
-		$term = "\$_PATERN_\$%{$term}%\$_PATERN_\$";
+		$term = "\$_PATTERN_\$%{$term}%\$_PATTERN_\$";
 
 		$sql .= "
 			SELECT 'SCHEMA' AS type, oid, NULL AS schemaname, NULL AS relname, nspname AS name

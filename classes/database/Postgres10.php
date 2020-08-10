@@ -19,108 +19,6 @@ class Postgres10 extends Postgres11 {
 		parent::__construct($conn);
 	}
 
-	// Help functions
-
-	function getHelpPages() {
-		include_once('./help/PostgresDoc10.php');
-		return $this->help_page;
-	}
-
-	/**
-	 * Returns a list of all functions in the database
-	 * @param $all If true, will find all available functions, if false just those in search path
-	 * @param $type If not null, will find all functions with return value = type
-	 *
-  	 * @return All functions
-	 */
-	function getFunctions($all = false, $type = null) {
-		if ($all) {
-			$where = 'pg_catalog.pg_function_is_visible(p.oid)';
-			$distinct = 'DISTINCT ON (p.proname)';
-
-			if ($type) {
-				$where .= " AND p.prorettype = (select oid from pg_catalog.pg_type p where p.typname = 'trigger') ";
-			}
-		}
-		else {
-			$c_schema = $this->_schema;
-			$this->clean($c_schema);
-			$where = "n.nspname = '{$c_schema}'";
-		//	$where .= " AND p.proname not LIKE 'sp\_%'";
-			$distinct = '';
-		}
-
-		$sql = "
-			SELECT
-				{$distinct}
-				p.oid AS prooid,
-				p.proname,
-				p.proretset,
-				pg_catalog.format_type(p.prorettype, NULL) AS proresult,
-				pg_catalog.oidvectortypes(p.proargtypes) AS proarguments,
-				pl.lanname AS prolanguage,
-				pg_catalog.obj_description(p.oid, 'pg_proc') AS procomment,
-				p.proname || ' (' || pg_catalog.oidvectortypes(p.proargtypes) || ')' AS proproto,
-				CASE WHEN p.proretset THEN 'setof ' ELSE '' END || pg_catalog.format_type(p.prorettype, NULL) AS proreturns,
-				u.usename AS proowner
-			FROM pg_catalog.pg_proc p
-				INNER JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
-				INNER JOIN pg_catalog.pg_language pl ON pl.oid = p.prolang
-				LEFT JOIN pg_catalog.pg_user u ON u.usesysid = p.proowner
-			WHERE NOT p.proisagg
-				AND {$where}
-			ORDER BY p.proname, proresult
-			";
-
-		return $this->selectSet($sql);
-	}
-
-	/**
-	 * Gets all information for an aggregate
-	 * @param $name The name of the aggregate
-	 * @param $basetype The input data type of the aggregate
-	 * @return A recordset
-	 */
-	function getAggregate($name, $basetype) {
-		$c_schema = $this->_schema;
-		$this->clean($c_schema);
-		$this->fieldclean($name);
-		$this->fieldclean($basetype);
-
-		$sql = "
-			SELECT p.proname, CASE p.proargtypes[0]
-				WHEN 'pg_catalog.\"any\"'::pg_catalog.regtype THEN NULL
-				ELSE pg_catalog.format_type(p.proargtypes[0], NULL) END AS proargtypes,
-				a.aggtransfn, format_type(a.aggtranstype, NULL) AS aggstype, a.aggfinalfn,
-				a.agginitval, a.aggsortop, u.usename, pg_catalog.obj_description(p.oid, 'pg_proc') AS aggrcomment
-			FROM pg_catalog.pg_proc p, pg_catalog.pg_namespace n, pg_catalog.pg_user u, pg_catalog.pg_aggregate a
-			WHERE n.oid = p.pronamespace AND p.proowner=u.usesysid AND p.oid=a.aggfnoid
-				AND p.proisagg AND n.nspname='{$c_schema}'
-				AND p.proname='" . $name . "'
-				AND CASE p.proargtypes[0]
-					WHEN 'pg_catalog.\"any\"'::pg_catalog.regtype THEN ''
-					ELSE pg_catalog.format_type(p.proargtypes[0], NULL)
-				END ='" . $basetype . "'";
-
-		return $this->selectSet($sql);
-	}
-
-	/**
-	 * Gets all aggregates
-	 * @return A recordset
-	 */
-	function getAggregates() {
-		$c_schema = $this->_schema;
-		$this->clean($c_schema);
-		$sql = "SELECT p.proname, CASE p.proargtypes[0] WHEN 'pg_catalog.\"any\"'::pg_catalog.regtype THEN NULL ELSE
-			   pg_catalog.format_type(p.proargtypes[0], NULL) END AS proargtypes, a.aggtransfn, u.usename,
-			   pg_catalog.obj_description(p.oid, 'pg_proc') AS aggrcomment
-			   FROM pg_catalog.pg_proc p, pg_catalog.pg_namespace n, pg_catalog.pg_user u, pg_catalog.pg_aggregate a
-			   WHERE n.oid = p.pronamespace AND p.proowner=u.usesysid AND p.oid=a.aggfnoid
-			   AND p.proisagg AND n.nspname='{$c_schema}' ORDER BY 1, 2";
-
-		return $this->selectSet($sql);
-	}
 
 	/**
 	 * Searches all system catalogs to find objects that match a certain name.
@@ -222,6 +120,7 @@ class Postgres10 extends Postgres11 {
 				WHERE c.relkind='v' AND r.rulename != '_RETURN' AND r.rulename ILIKE {$term} {$where}
 		";
 
+
 		// Add advanced objects if show_advanced is set
 		if ($conf['show_advanced']) {
 			$sql .= "
@@ -270,6 +169,109 @@ class Postgres10 extends Postgres11 {
 		$sql .= "ORDER BY type, schemaname, relname, name";
 
 		return $this->selectSet($sql);
+	}
+
+	/**
+	 * Returns a list of all functions in the database
+	 * @param $all If true, will find all available functions, if false just those in search path
+	 * @param $type If not null, will find all functions with return value = type
+	 *
+  	 * @return All functions
+	 */
+	function getFunctions($all = false, $type = null) {
+		if ($all) {
+			$where = 'pg_catalog.pg_function_is_visible(p.oid)';
+			$distinct = 'DISTINCT ON (p.proname)';
+
+			if ($type) {
+				$where .= " AND p.prorettype = (select oid from pg_catalog.pg_type p where p.typname = 'trigger') ";
+			}
+		}
+		else {
+			$c_schema = $this->_schema;
+			$this->clean($c_schema);
+			$where = "n.nspname = '{$c_schema}'";
+		//	$where .= " AND p.proname not LIKE 'sp\_%'";
+			$distinct = '';
+		}
+
+		$sql = "
+			SELECT
+				{$distinct}
+				p.oid AS prooid,
+				p.proname,
+				p.proretset,
+				pg_catalog.format_type(p.prorettype, NULL) AS proresult,
+				pg_catalog.oidvectortypes(p.proargtypes) AS proarguments,
+				pl.lanname AS prolanguage,
+				pg_catalog.obj_description(p.oid, 'pg_proc') AS procomment,
+				p.proname || ' (' || pg_catalog.oidvectortypes(p.proargtypes) || ')' AS proproto,
+				CASE WHEN p.proretset THEN 'setof ' ELSE '' END || pg_catalog.format_type(p.prorettype, NULL) AS proreturns,
+				u.usename AS proowner
+			FROM pg_catalog.pg_proc p
+				INNER JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+				INNER JOIN pg_catalog.pg_language pl ON pl.oid = p.prolang
+				LEFT JOIN pg_catalog.pg_user u ON u.usesysid = p.proowner
+			WHERE NOT p.proisagg
+				AND {$where}
+			ORDER BY p.proname, proresult
+			";
+
+		return $this->selectSet($sql);
+	}
+
+	/**
+	 * Gets all information for an aggregate
+	 * @param $name The name of the aggregate
+	 * @param $basetype The input data type of the aggregate
+	 * @return A recordset
+	 */
+	function getAggregate($name, $basetype) {
+		$c_schema = $this->_schema;
+		$this->clean($c_schema);
+		$this->fieldclean($name);
+		$this->fieldclean($basetype);
+
+		$sql = "
+			SELECT p.proname, CASE p.proargtypes[0]
+				WHEN 'pg_catalog.\"any\"'::pg_catalog.regtype THEN NULL
+				ELSE pg_catalog.format_type(p.proargtypes[0], NULL) END AS proargtypes,
+				a.aggtransfn, format_type(a.aggtranstype, NULL) AS aggstype, a.aggfinalfn,
+				a.agginitval, a.aggsortop, u.usename, pg_catalog.obj_description(p.oid, 'pg_proc') AS aggrcomment
+			FROM pg_catalog.pg_proc p, pg_catalog.pg_namespace n, pg_catalog.pg_user u, pg_catalog.pg_aggregate a
+			WHERE n.oid = p.pronamespace AND p.proowner=u.usesysid AND p.oid=a.aggfnoid
+				AND p.proisagg AND n.nspname='{$c_schema}'
+				AND p.proname='" . $name . "'
+				AND CASE p.proargtypes[0]
+					WHEN 'pg_catalog.\"any\"'::pg_catalog.regtype THEN ''
+					ELSE pg_catalog.format_type(p.proargtypes[0], NULL)
+				END ='" . $basetype . "'";
+
+		return $this->selectSet($sql);
+	}
+
+	/**
+	 * Gets all aggregates
+	 * @return A recordset
+	 */
+	function getAggregates() {
+		$c_schema = $this->_schema;
+		$this->clean($c_schema);
+		$sql = "SELECT p.proname, CASE p.proargtypes[0] WHEN 'pg_catalog.\"any\"'::pg_catalog.regtype THEN NULL ELSE
+			   pg_catalog.format_type(p.proargtypes[0], NULL) END AS proargtypes, a.aggtransfn, u.usename,
+			   pg_catalog.obj_description(p.oid, 'pg_proc') AS aggrcomment
+			   FROM pg_catalog.pg_proc p, pg_catalog.pg_namespace n, pg_catalog.pg_user u, pg_catalog.pg_aggregate a
+			   WHERE n.oid = p.pronamespace AND p.proowner=u.usesysid AND p.oid=a.aggfnoid
+			   AND p.proisagg AND n.nspname='{$c_schema}' ORDER BY 1, 2";
+
+		return $this->selectSet($sql);
+	}
+
+	// Help functions
+
+	function getHelpPages() {
+		include_once('./help/PostgresDoc10.php');
+		return $this->help_page;
 	}
 
 }

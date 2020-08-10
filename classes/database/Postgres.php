@@ -8178,6 +8178,24 @@ class Postgres extends ADODB_base {
 		return $this->selectSet($sql);
 	}
 
+	/**
+	 * Import foreign schema
+	 * @return 0 success
+	 */
+	function importForeignTable($fsname, $alltables, $localschemaname, $schemaname, $tablesOnly) {
+
+		if (!empty($fsname) && !empty($localschemaname) && !empty($schemaname)) {
+			$f_schema = $this->_schema;
+			$this->fieldClean($f_schema);
+
+			$tablesOnlyString = $tablesOnly ? implode($tablesOnly, ", ") : "";
+			$tablesOnlySql = $alltables ? "" : "LIMIT TO ({$tablesOnlyString})";
+			$sql = "IMPORT FOREIGN SCHEMA \"{$schemaname}\" {$tablesOnlySql} FROM SERVER \"{$fsname}\" INTO \"{$localschemaname}\";";
+			return $this->execute($sql);
+		}
+		return 0;
+	}
+
 	// Capabilities
 
 	function hasAggregateSortOp() { return true; }

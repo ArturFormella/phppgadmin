@@ -8157,6 +8157,27 @@ class Postgres extends ADODB_base {
 		return $this->selectSet($sql);
 	}
 
+	/**
+	 * Retrieves information for all foreign servers
+	 * @param $all Include all foreign servers
+	 * @return A recordset
+	 */
+	function getForeignServers($all = false) {
+		global $conf;
+		$sql = "SELECT
+			srvname as name,
+			srvowner::regrole::text as owner,
+			fdwname as wrapper,
+			array_to_string(srvoptions,', ') as options
+		FROM pg_foreign_server
+		JOIN pg_foreign_data_wrapper w on w.oid = srvfdw
+		WHERE
+			has_server_privilege(pg_foreign_server.oid, 'USAGE')
+		ORDER BY name;";
+
+		return $this->selectSet($sql);
+	}
+
 	// Capabilities
 
 	function hasAggregateSortOp() { return true; }

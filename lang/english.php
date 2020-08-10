@@ -211,6 +211,11 @@
 	$lang['strshowalltables'] = 'Show all tables';
 	$lang['strnotables'] = 'No tables found.';
 	$lang['strnotable'] = 'No table found.';
+	$lang['strcreateforeigntable'] = 'Create foreign table';
+	$lang['strimportforeigntable'] = 'Import foreign table';
+	$lang['strsynchronizetable'] = 'Synchronize with';
+	$lang['strlocalschemaname'] = 'Local schema name';
+	$lang['strforeignschemaname'] = 'Foreign schema name';
 	$lang['strcreatetable'] = 'Create table';
 	$lang['strcreatetablelike'] = 'Create table like';
 	$lang['strcreatetablelikeparent'] = 'Source table';

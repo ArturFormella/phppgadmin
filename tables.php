@@ -239,6 +239,129 @@
 	}
 
 	/**
+	 * Displays a screen where they can enter a new foreign table
+	 */
+	function doImportForeign($msg = '') {
+		global $data, $misc;
+		global $lang;
+
+		if (!isset($_REQUEST['stage'])) {
+			$_REQUEST['stage'] = 1;
+		}
+
+		if (!isset($_REQUEST['tablename'])) $_REQUEST['tablename'] = '';
+		if (!isset($_REQUEST['schemaname'])) $_REQUEST['schemaname'] = '';
+		if (!isset($_REQUEST['localschemaname'])) $_REQUEST['localschemaname'] = $_REQUEST['schema'];
+		if (!isset($_REQUEST['fsname'])) $_REQUEST['fsname'] = '';
+		if (!isset($_REQUEST['alltables'])) $_REQUEST['alltables'] = '';
+
+		switch ($_REQUEST['stage']) {
+			case 1:
+				// Fetch all foreignServers from the database
+				$foreignServers = $data->getForeignServers();
+
+				$misc->printTrail('schema');
+				$misc->printTitle($lang['strimportforeigntable'], 'pg.table.create.foreign');
+				$misc->printMsg($msg);
+
+				echo "<form action=\"tables.php\" method=\"post\">\n";
+				echo "<table>\n";
+
+				if ($foreignServers->recordCount() > 0) {
+					echo "\t<tr>\n\t\t<th class=\"data left required\">{$lang['strtablespace']}</th>\n";
+					echo "\t\t<td class=\"data1\">\n\t\t\t<select name=\"fsname\">\n";
+					// Display all other foreignServers
+					while (!$foreignServers->EOF) {
+						$fsname = htmlspecialchars($foreignServers->fields['name']);
+						$wrapper = htmlspecialchars($foreignServers->fields['wrapper']);
+						$options = htmlspecialchars($foreignServers->fields['options']);
+						echo "\t\t\t\t<option value=\"{$fsname}\"",
+							($foreignServers->fields['name'] == $_REQUEST['fsname']) ? ' selected="selected"' : '', ">{$wrapper} / {$fsname} ({$options})</option>\n";
+						$foreignServers->moveNext();
+					}
+					echo "\t\t\t</select>\n\t\t</td>\n\t</tr>\n";
+				}
+
+				$schemas = $data->getSchemas();
+				echo "<tr><th class=\"data left required\">{$lang['strlocalschemaname']}</th>\n";
+				echo "<td><select name=\"localschemaname\">";
+
+				while (!$schemas->EOF) {
+					$schema = $schemas->fields['nspname'];
+					$nspcomment = $schemas->fields['nspcomment'];
+					echo "<option value=\"", htmlspecialchars($schema), "\"",
+						($schema == $_REQUEST['localschemaname']) ? ' selected="selected"' : '', ">", htmlspecialchars($schema), "</option>\n";
+					$schemas->moveNext();
+				}
+			  echo "</select></td></tr>\n";
+
+				echo "\t<tr>\n\t\t<th class=\"data left required\">{$lang['strforeignschemaname']}</th>\n";
+				echo "\t\t<td class=\"data\"><input name=\"schemaname\" size=\"32\" maxlength=\"{$data->_maxNameLen}\" value=\"",
+					htmlspecialchars($_REQUEST['schemaname']), "\" /></td>\n\t</tr>\n";
+
+				echo "\t<tr>\n\t\t<th class=\"data left\">{$lang['stroptions']}</th>\n";
+				echo "\t\t<td class=\"data\"><label for=\"alltables\"><input type=\"checkbox\" id=\"alltables\" name=\"alltables\"", isset($_REQUEST['alltables']) ? ' checked="checked"' : '', " />all tables in schema</label></td>\n\t</tr>\n";
+
+				echo "\t<tr>\n\t\t<th class=\"data left\">{$lang['strtablename']}</th>\n";
+				echo "\t\t<td class=\"data\"><input name=\"tablename\" size=\"32\" maxlength=\"{$data->_maxNameLen}\" value=\"",
+					htmlspecialchars($_REQUEST['tablename']), "\" /></td>\n\t</tr>\n";
+
+				echo "</table>\n";
+				echo "<p><input type=\"hidden\" name=\"action\" value=\"importforeign\" />\n";
+				echo "<input type=\"hidden\" name=\"stage\" value=\"3\" />\n";
+				echo $misc->form;
+				echo "<input type=\"submit\" value=\"{$lang['strnext']}\" />\n";
+				echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" /></p>\n";
+				echo "</form>\n";
+				break;
+
+			case 3:
+				global $data, $lang, $_reload_browser;
+
+				// Check inputs
+				if (trim($_REQUEST['fsname']) == '') {
+					$_REQUEST['stage'] = 1;
+					doImportForeign($lang['strtableneedsname']);
+					return;
+				}
+				elseif (trim($_REQUEST['alltables']) == false && trim($_REQUEST['tablename']) == '') {
+					$_REQUEST['stage'] = 1;
+					doImportForeign($lang['strtableneedsname']);
+					return;
+				}
+				elseif (trim($_REQUEST['schemaname']) == '' || trim($_REQUEST['localschemaname']) == '') {
+					$_REQUEST['stage'] = 1;
+					doImportForeign($lang['strtableneedscols']);
+					return;
+				}
+
+				$tables = array();
+				if(isset($_REQUEST['tablename']) && !$_REQUEST['alltables']){
+					$tables[] = trim($_REQUEST['tablename']);
+				}
+				$status = $data->importForeignTable(trim($_REQUEST['fsname']), trim($_REQUEST['alltables']), trim($_REQUEST['localschemaname']), trim($_REQUEST['schemaname']), $tables);
+
+				if ($status == 0) {
+					$_reload_browser = true;
+					doDefault($lang['strtablecreated']);
+				}
+				elseif ($status == -1) {
+					$_REQUEST['stage'] = 2;
+					doImportForeign($lang['strtableneedsfield']);
+					return;
+				}
+				else {
+					$_REQUEST['stage'] = 2;
+					doImportForeign($lang['strtablecreatedbad']);
+					return;
+				}
+				break;
+			default:
+				echo "<p>{$lang['strinvalidparam']}</p>\n";
+		}
+	}
+
+	/**
 	 * Dsiplay a screen where user can create a table from an existing one.
 	 * We don't have to check if pg supports schema cause create table like
 	 * is available under pg 7.4+ which has schema.
@@ -944,6 +1067,20 @@
 					)
 				),
 				'content' => $lang['strcreatetable']
+			),
+			'importforeign' => array (
+				'attr'=> array (
+					'href' => array (
+						'url' => 'tables.php',
+						'urlvars' => array (
+							'action' => 'importforeign',
+							'server' => $_REQUEST['server'],
+							'database' => $_REQUEST['database'],
+							'schema' => $_REQUEST['schema']
+						)
+					)
+				),
+				'content' => $lang['strimportforeigntable']
 			)
 		);
 
@@ -1045,6 +1182,10 @@
 		case 'create':
 			if (isset($_POST['cancel'])) doDefault();
 			else doCreate();
+			break;
+		case 'importforeign':
+			if (isset($_POST['cancel'])) doDefault();
+			else doImportForeign();
 			break;
 		case 'createlike':
 			doCreateLike(false);
